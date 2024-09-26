@@ -23,9 +23,10 @@ sprites = {
     tail_vertical = 17,
     body_vertical = 18,
     head_vertical = 19,
-    corner = 4,             -- up to right corner sprite
-    apple = 5,              -- id for normal apple sprite
-    golden_apple = 6        -- id for golden apple sprite
+    corner = 4,                     -- up to right corner sprite
+    apple = 5,                      -- id for normal apple sprite
+    golden_apple = 6,               -- id for golden apple sprite
+    semi_transparent_apple = 21     -- id for semi-transparent apple sprite
 }
 
 -- directions
@@ -62,8 +63,11 @@ speed_increase_per_golden = 1 -- increase speed by 1 frame per golden apple eate
 options = {
     { name = "invisible_body", text = "invisible body", effect = "invisible" },
     { name = "extra_speed", text = "extra speed", effect = "speed" },
-    { name = "spikes", text = "spikes", effect = "spikes" }
+    { name = "spikes", text = "spikes", effect = "spikes" },
+    { name = "reverse_controls", text = "reverse controls", effect = "reverse_controls" }, 
+    { name = "invisible_apple", text = "invisible apple", effect = "invisible_apple" } 
 }
+
 selected_options = {}
 options_randomized = false
 effect_start_apples = 0
@@ -73,3 +77,5 @@ active_effect = nil
 spikes = {}
 
 resume_delay = 0 -- Time to wait before resuming the game
+apple_invisible_curse_active = false
+active_curses = {} -- Table to hold all active curses

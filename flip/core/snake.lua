@@ -8,6 +8,7 @@ function spawn_snake(initial_length)
         dx = 1,
         dy = 0,
         direction = directions.right,
+        reversed = false,
         body = {}
     }
 
@@ -148,7 +149,7 @@ function spawn_snake(initial_length)
             next_apple_golden = false
         end
     
-        check_effect_end()
+        check_curse_end()
         -- increment apples eaten and create a new apple
         apples_eaten += 1
         apple = spawn_apple()
@@ -159,33 +160,38 @@ end
 
 -- handle snake input for movement
 function handle_snake_input()
-    -- left input
-    if btn(0) and snake.dx == 0 then
-        -- prevent reversing direction
+    -- Determine the input directions based on whether controls are reversed
+    local left = snake.reversed and 1 or 0
+    local right = snake.reversed and 0 or 1
+    local up = snake.reversed and 3 or 2
+    local down = snake.reversed and 2 or 3
+
+    -- Left input
+    if btn(left) and snake.dx == 0 then
         if last_direction ~= directions.right then
             snake.dx = -1
             snake.dy = 0
             snake.direction = directions.left
         end
 
-    -- right input
-    elseif btn(1) and snake.dx == 0 then
+    -- Right input
+    elseif btn(right) and snake.dx == 0 then
         if last_direction ~= directions.left then
             snake.dx = 1
             snake.dy = 0
             snake.direction = directions.right
         end
 
-    -- up input
-    elseif btn(2) and snake.dy == 0 then
+    -- Up input
+    elseif btn(up) and snake.dy == 0 then
         if last_direction ~= directions.down then
             snake.dx = 0
             snake.dy = -1
             snake.direction = directions.up
         end
 
-    -- down input
-    elseif btn(3) and snake.dy == 0 then
+    -- Down input
+    elseif btn(down) and snake.dy == 0 then
         if last_direction ~= directions.up then
             snake.dx = 0
             snake.dy = 1

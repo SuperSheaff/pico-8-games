@@ -82,6 +82,8 @@ function start_game_state()
     score = 0 -- initialize score to 0
     update_rate = base_update_rate -- reset game speed to base value
     apple = spawn_apple() -- only one apple at a time
+    active_curses = {}
+    apple_invisible_curse_active = false
     snake = spawn_snake(5)
     next_apple_golden = false
     game_over = false
@@ -92,6 +94,7 @@ end
 function update_game()
     -- handle input and update game state
     handle_snake_input()
+    apple:update()
 
     -- update game objects based on ticks
     ticks += 1
@@ -142,7 +145,7 @@ function handle_option_selection()
         sfx(4)
 
         -- Apply the chosen effect based on the selected option index
-        apply_effect(selected_option)
+        apply_curse(selected_option)
 
         -- Set the resume delay before the game resumes
         resume_delay = 30 -- 1 second delay (30 frames)
@@ -157,73 +160,93 @@ function select_random_options()
     -- Clear the selected_options table to remove previous selections
     selected_options = {}
 
-    local option_indices = { 1, 2, 3 }
-    
-    -- Randomly shuffle the option indices
-    for i = #option_indices, 2, -1 do
-        local j = flr(rnd(i)) + 1
-        option_indices[i], option_indices[j] = option_indices[j], option_indices[i]
+    -- Generate a list of available option indices
+    local available_indices = {}
+    for i = 1, #options do
+        add(available_indices, i)
     end
-    
-    -- Select the first two options from the shuffled list
+
+    -- Randomly select two distinct options
     for i = 1, 2 do
-        local option = options[option_indices[i]]
+        -- Randomly pick an index from available_indices
+        local random_index = flr(rnd(#available_indices)) + 1
+        local selected_index = available_indices[random_index]
+
+        -- Remove the selected index from available_indices
+        deli(available_indices, random_index)
+
+        -- Get the selected option
+        local option = options[selected_index]
+        
         -- Generate a random count (1-5) for the chosen option
-        local count = flr(rnd(4)) + 1
+        local count = flr(rnd(5)) + 1
+
+        -- Add the selected option and count to the selected_options table
         add(selected_options, { option = option, count = count })
     end
 end
 
-function apply_effect(selected_option_index)
+function apply_curse(selected_option_index)
     -- Get the chosen option details
     local chosen_option = selected_options[selected_option_index]
-    local effect = chosen_option.option.effect
+    local curse = chosen_option.option.effect
     local count = chosen_option.count
     
-    -- Store the active effect details
-    active_effect = {
-        effect = effect,
+    -- Add the curse to the active_curses table
+    add(active_curses, {
+        curse = curse,
         required_apples = count,
         start_apples = apples_eaten
-    }
+    })
 
-    if effect == "invisible" then
-        -- Apply the invisible body effect
+    -- Apply the curse effect
+    if curse == "invisible" then
+        -- Apply the invisible body curse
         snake.invisible = true
-        print("Invisible body activated for " .. count .. " apples!", 10, 10, 8)
         
-    elseif effect == "speed" then
-        -- Apply the extra speed effect
-        update_rate = base_update_rate - 2 -- Adjust the speed to be faster
-        print("Extra speed activated for " .. count .. " apples!", 10, 10, 8)
+    elseif curse == "speed" then
+        -- Apply the extra speed curse
+        update_rate = max(1, update_rate - 2) -- Adjust the speed to be faster
         
-    elseif effect == "spikes" then
+    elseif curse == "spikes" then
         -- Spawn spikes on the game area
         spawn_spikes(count) -- Custom function to spawn spikes
-        print(count .. " spikes spawned for " .. count .. " apples!", 10, 10, 8)
+
+    elseif curse == "reverse_controls" then
+        snake.reversed = true
+
+    elseif curse == "invisible_apple" then
+        apple_invisible_curse_active = true -- Activate curse
+        print("Invisible apple activated for " .. count .. " apples!", 10, 10, 8)
     end
 end
 
-
-function check_effect_end()
-    -- Check if an effect is currently active
-    if active_effect then
-        -- Check if the player has eaten the required number of apples to end the effect
-        if apples_eaten - active_effect.start_apples >= active_effect.required_apples - 1 then
-            -- End the current active effect
-            end_effect(active_effect.effect)
-            active_effect = nil -- Reset active effect to indicate no effect is active
+function check_curse_end()
+    -- Iterate through all active curses
+    for curse in all(active_curses) do
+        -- Check if the player has eaten the required number of apples to end the curse
+        if apples_eaten - curse.start_apples >= curse.required_apples - 1 then
+            -- End the current curse
+            end_curse(curse.curse)
+            del(active_curses, curse) -- Remove the curse from the table
         end
     end
 end
 
-function end_effect(effect)
-    if effect == "invisible" then
+function end_curse(curse)
+    if curse == "invisible" then
         snake.invisible = false
-    elseif effect == "speed" then
+    elseif curse == "speed" then
         update_rate = base_update_rate
-    elseif effect == "spikes" then
+    elseif curse == "spikes" then
         remove_spikes()
+    elseif curse == "reverse_controls" then
+        snake.reversed = false
+    elseif curse == "invisible_apple" then
+        apple_invisible_curse_active = false -- Deactivate curse
+        apple.state = "visible"
+        apple.timer = 0 -- Reset timer
+        print("Invisible apple curse ended! Apple is visible again.", 10, 10, 8)
     end
 end
 
@@ -260,7 +283,6 @@ function draw_spikes()
         spr(spike.sprite_id, spike.x * grid_size, spike.y * grid_size)
     end
 end
-
 
 function spawn_spike(x, y)
     local spike = {
