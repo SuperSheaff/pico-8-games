@@ -39,7 +39,7 @@ function _draw()
 
 end
 
-function _update()
+function _directions.update()
 	
 	-- ❎ to sort
 	
@@ -52,7 +52,7 @@ function _update()
 			
 			if (g[i] > g[i+1]) then
 				
-				-- the left one is taller,
+				-- the directions.left one is taller,
 				-- so swap them!
 				temp   = g[i]
 				g[i]   = g[i+1]

@@ -11,7 +11,7 @@ function _draw()
 	pset(x,y,c)
 end
 
-function _update()
+function _directions.update()
 	
 	if (btn(0)) then x=x-1 end
 	if (btn(1)) then x=x+1 end
@@ -30,7 +30,7 @@ function _update()
 	local y2 = rnd(128)
 	local col = pget(x2,y2)
 	
-	--drip down if it is colourful
+	--drip directions.down if it is colourful
 	if (col > 1) then
 		pset(x2,y2+1,col) 
 	end

@@ -27,7 +27,7 @@ function _draw()
 	)
 end
 
-function _update()
+function _directions.update()
 	
 	ac=0.1 -- acceleration
 	

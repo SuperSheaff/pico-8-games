@@ -29,9 +29,9 @@ function _draw()
 	      bally-4-vely)
 end
 
-function _update60()
+function _directions.update60()
 	
-	-- move ball left/right
+	-- move ball directions.left/directions.right
 	
 	if ballx+velx < 0+size or
 	   ballx+velx > 128-size
@@ -44,7 +44,7 @@ function _update60()
 		ballx += velx
 	end
 	
-	-- move ball up/down
+	-- move ball directions.up/directions.down
 	
 	if bally+vely < 0+size or
 	   bally+vely > floor_y-size

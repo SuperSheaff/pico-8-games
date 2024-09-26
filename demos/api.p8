@@ -59,7 +59,7 @@ function _draw()
 	del(tbl,"d") --remove by value
 	
 	-- iterate over the table
-	-- (draw letters bottom left)
+	-- (draw letters bottom directions.left)
 	cursor(2,104,5) -- x,y,col
 	foreach(tbl,print)
 	
@@ -145,9 +145,9 @@ function _draw()
 
 end
 
--- _update(): called 30 fps
--- (use _update60 for 60fps)
-function _update()
+-- _directions.update(): called 30 fps
+-- (use _directions.update60 for 60fps)
+function _directions.update()
 	
 	-- button pressed: play a sfx
 	if (btnp(🅾️)) then

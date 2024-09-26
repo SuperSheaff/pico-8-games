@@ -7,7 +7,7 @@ __lua__
 level=1
 
 num_players = 1
-corrupt_mode = false
+corrdirections.upt_mode = false
 paint_mode = false
 max_actors = 64
 play_music = true
@@ -29,7 +29,7 @@ function make_actor(k,x,y,d)
 		friction=0.9,
 		can_bump=true,
 		dash=0,
-		super=0,
+		sdirections.uper=0,
 		t=0,
 		standing = false,
 		draw=draw_actor,
@@ -39,7 +39,7 @@ function make_actor(k,x,y,d)
 	-- attributes by flag
 	
 	if (fget(k,6)) then
-		a.is_pickup=true
+		a.is_pickdirections.up=true
 	end
 	
 	if (fget(k,7)) then
@@ -115,7 +115,7 @@ end
 
 -- clear_cel using neighbour val
 -- prefer empty, then non-ground
--- then left neighbour
+-- then directions.left neighbour
 
 function clear_cel(x, y)
 	local val0 = mget(x-1,y)
@@ -163,7 +163,7 @@ function solid (x, y, ignore)
 	
 	local val = mget(x, y)
 	
-	-- flag 6: can jump up through
+	-- flag 6: can jump directions.up through
 	-- (and only top half counts)	
 	if (fget(val,6)) then
 		if (ignore) return false
@@ -217,7 +217,7 @@ function move_player(pl)
 		accel = 0.08
 	end
 	
-	if (pl.super > 0) then 
+	if (pl.sdirections.uper > 0) then 
 		q*=1.5
 		accel*=1.5
 	end
@@ -272,9 +272,9 @@ function move_player(pl)
 	
 	end
 	
-	-- super: give more dash
+	-- sdirections.uper: give more dash
 	
-	if (pl.super > 0) pl.dash=2
+	if (pl.sdirections.uper > 0) pl.dash=2
 	
 	-- dashing
 	
@@ -303,7 +303,7 @@ function move_player(pl)
 	
 	pl.dash = max(0,pl.dash-1)
 	pl.delay = max(0,pl.delay-1)
-	pl.super = max(0, pl.super-1)
+	pl.sdirections.uper = max(0, pl.sdirections.uper-1)
 	
 	-- frame	
 
@@ -339,7 +339,7 @@ function move_monster(m)
 		m.dy = -0.5
 	end
 	
-	-- hit cooldown
+	-- hit cooldirections.down
 	-- (can't get hit twice within
 	--  half a second)
 	if (m.hit_t>0) m.hit_t-=1
@@ -403,13 +403,13 @@ function move_actor(a)
 	local ssolid=
 		a.dash>0 and smash or solid 
 	
-	-- solid going down -- only
-	-- smash when holding down
+	-- solid going directions.down -- only
+	-- smash when holding directions.down
 	local ssolidd=
 		a.dash>0 and (btn(3,a.id))
 		 and smash or solid 
 		
-	--ignore jump-up-through
+	--ignore jump-directions.up-through
 	--blocks only when have gravity
 	local ign=a.ddy > 0
 	
@@ -444,7 +444,7 @@ function move_actor(a)
 	local fw=0.25
 
 	if (a.dy < 0) then
-		-- going up
+		-- going directions.up
 		
 		if (
 		 ssolid(a.x-fw, a.y+a.dy-1,ign) or
@@ -460,7 +460,7 @@ function move_actor(a)
 		end
 
 	else
-		-- going down
+		-- going directions.down
 	
 		local y1=a.y+a.dy
 		if ssolidd(a.x-fw,y1) or
@@ -484,7 +484,7 @@ function move_actor(a)
 		else
 			a.y += a.dy  
 		end
-		-- pop up
+		-- pop directions.up
 		
 		while solid(a.x,a.y-0.05) do
 			a.y -= 0.125
@@ -551,10 +551,10 @@ function collide_event(a1, a2)
 	end
 
 	if(a1.is_player) then
-		if(a2.is_pickup) then
+		if(a2.is_pickdirections.up) then
 
 			if (a2.k==64) then
-				a1.super = 30*4
+				a1.sdirections.uper = 30*4
 				--sfx(17)
 				a1.dx = a1.dx * 2
 				--a1.dy = a1.dy-0.1
@@ -612,7 +612,7 @@ function collide_event(a1, a2)
 			sfx(9)
 		end
 		
-		-- charge or dupe monster
+		-- charge or ddirections.upe monster
 		
 		if(a2.is_monster) then -- monster
 			
@@ -622,7 +622,7 @@ function collide_event(a1, a2)
 					and a2.can_bump
 				) then
 				
-				-- slow down player
+				-- slow directions.down player
 				a1.dx *= 0.7
 				a1.dy *= -0.7
 				
@@ -724,7 +724,7 @@ function outgame_logic()
 	
 end
 
-function _update() 
+function _directions.update() 
 	
 	for a in all(actor) do
 		a:move()
@@ -738,9 +738,9 @@ function _update()
 	end
 	
 	outgame_logic()
-	update_camera()
+	directions.update_camera()
 
-	if (glitch_mushroom or corrupt_mode) then
+	if (glitch_mushroom or corrdirections.upt_mode) then
 		for i=1,4 do
 			poke(rnd(0x8000),rnd(0x100))
 		end
@@ -896,7 +896,7 @@ function draw_actor(a)
 	local sy=a.y*8-8
 	
 	-- sprite flag 3 (green):
-	-- draw one pixel up
+	-- draw one pixel directions.up
 	if (fget(fr,3)) sy-=1
 
 	-- draw the sprite
@@ -1027,11 +1027,11 @@ function draw_world(
 		
 		repeat
 			map(s[1],s[2],sx,sy,s[3],s[4])
-			if (el.fill_up) then
-				rectfill(sx,-1,sx+pixw-1,sy-1,el.fill_up)
+			if (el.fill_directions.up) then
+				rectfill(sx,-1,sx+pixw-1,sy-1,el.fill_directions.up)
 			end
-			if (el.fill_down) then
-				rectfill(sx,sy+pixh,sx+pixw-1,128,el.fill_down)
+			if (el.fill_directions.down) then
+				rectfill(sx,sy+pixh,sx+pixw-1,128,el.fill_directions.down)
 			end
 			sx+=pixw
 		
@@ -1135,7 +1135,7 @@ function pl_camx(x,sw)
 end
 
 
-function update_camera()
+function directions.update_camera()
 
 	local num=0
 	if (alive(pl[1])) num+=1
@@ -1149,7 +1149,7 @@ function update_camera()
 	-- when standing. quantize y
 	-- into 2 blocks high so don't
 	-- get small adjustments
-	-- (should be in _update)
+	-- (should be in _directions.update)
 	
 	if (num==2) then
 		-- 2 active players: average y
@@ -1223,7 +1223,7 @@ actor_dat=
 	},
 	
 	[64]={
-		draw=draw_charge_powerup
+		draw=draw_charge_powerdirections.up
 	},
 	
 	[65]={
@@ -1413,7 +1413,7 @@ function draw_frog(a)
 	rectfill(sx2,sy,sx2+d,sy-1,14)
 end
 
-function draw_charge_powerup(a)
+function draw_charge_powerdirections.up(a)
 	--pal(6,13+(a.t/4)%3)
 	draw_actor(a)
 	local sx=a.x*8
@@ -1806,7 +1806,7 @@ function move_bird(a)
 	local a2
 	
 	if (not a.holding) then
-		a2=closest_a(a,actor,"is_pickup")
+		a2=closest_a(a,actor,"is_pickdirections.up")
 		if a2 and abs(a2.x-a.x)<4 and
 					abs(a2.y-a.y)<4 then
 			p=nil -- ignore player
@@ -1824,7 +1824,7 @@ function move_bird(a)
 	local dx,dy=tx-a.x,ty-a.y 
 	local dd=sqrt(dx*dx+dy*dy)
 	
-	-- pick up
+	-- pick directions.up
 	if (a2 and dd<1) then
 		
 		a.holding=a2
@@ -1832,7 +1832,7 @@ function move_bird(a)
 	
 	end
 	
-	-- uncomment: pick up player!
+	-- uncomment: pick directions.up player!
 	--[[
 	if (p) then
 		if (dd<0.5) a.holding=p
@@ -1862,13 +1862,13 @@ function move_bird(a)
 		if (tt==6) then
 			local mag=.3 -- slowly decend
 			
-			-- fly up
+			-- fly directions.up
 			if (dd<4 and a.y>ty) mag=.4
 			
 			-- wall: fly to top
 			if (a.hit_wall)mag=.45
 			
-			-- player can shoo upwards
+			-- player can shoo directions.upwards
 			if (p and a.y>ty and not ah) mag=.45
 			
 			a.hit_wall = false
@@ -1919,26 +1919,26 @@ theme_dat={
 		xyz = {0,28*4,4,true},
 		dx=-8,
 		cols={15,7,1,-1},
-		fill_down = 12
+		fill_directions.down = 12
 	},
 	-- mountains
 	{src={0,56,16,8},
 		xyz = {0,28*4,4,true},
-		fill_down=13,
+		fill_directions.down=13,
 	},
 	
 	-- leaves: light
 	{src={32,48,16,6},
 		xyz = {(118*8),-8,1.5},
 		cols={1,3},
-		fill_up=1
+		fill_directions.up=1
 	},
 	
 	-- leaves: dark (foreground)
 	{src={32,48,16,6},
 		xyz = {(118*8),-12,0.8},
 		cols={3,1},
-		fill_up=1
+		fill_directions.up=1
 	},
 	
 		
@@ -1959,14 +1959,14 @@ theme_dat={
 		--cols={7,6,15,6},
 		cols={3,13,7,13,10,13,1,13,11,13,9,13,14,13,15,13,2,13},
 		
-		fill_down=13
+		fill_directions.down=13
 	},
 	{
 		-- foreground shrubbery
 		src={16,56,16,8},
 		xyz = {0,64*0.8,0.6,true},
 		cols={15,1,7,1},
-		fill_down = 12
+		fill_directions.down = 12
 	},
 	-- foreground shrubbery feature
 	{
@@ -1986,21 +1986,21 @@ theme_dat={
 	{src={32,48,16,6},
 		xyz = {40,64,4,true},
 		cols={1,13,3,13},
-		fill_up=13
+		fill_directions.up=13
 	},
 	
 		-- leaves: light
 	{src={32,48,16,6},
 		xyz = {0,-4,1.5,true},
 		cols={1,3},
-		fill_up=1
+		fill_directions.up=1
 	},
 	
 	-- leaves: dark (foreground)
 	{src={32,48,16,6},
 		xyz = {-40,-6,0.8,true},
 		cols={3,1},
-		fill_up=1
+		fill_directions.up=1
 	}
 	
 	
@@ -2019,7 +2019,7 @@ theme_dat={
 	-- mountains indigo (far)
 	{src={0,56,16,8},
 		xyz = {-64,30,8,true},
-		fill_down=13,
+		fill_directions.down=13,
 		cols={6,15,13,6}
 	},
 	
@@ -2029,13 +2029,13 @@ theme_dat={
 		xyz = {0,50,8,true},
 		dx=-30,
 		cols={15,7,1,-1},
-		fill_down = 7
+		fill_directions.down = 7
 	},
 	
 	-- mountains close
 	{src={0,56,16,8},
 		xyz = {0,140,8,true},
-		fill_down=13,
+		fill_directions.down=13,
 		cols={6,5,13,1}
 	},
 		

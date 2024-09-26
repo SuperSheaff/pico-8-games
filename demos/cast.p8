@@ -41,7 +41,7 @@ function mz(x,y)
 	return 16-mget(x,y)*0.125
 end
 
-function _update()
+function _directions.update()
 	
 	-- moving walls
 	

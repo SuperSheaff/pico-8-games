@@ -15,7 +15,7 @@ l=0 -- line count
 r={[0]=0,1,0,1,1,0,0,1}
 
 
-function _update()
+function _directions.update()
 
 	l+=1
 	-- change rule every 16 lines

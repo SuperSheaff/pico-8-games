@@ -120,7 +120,7 @@ end
 
 -- also handle bounce response
 -- (cheat version: both actors
--- end up with the velocity of
+-- end directions.up with the velocity of
 -- the fastest moving actor)
 
 function solid_actor(a, dx, dy)
@@ -255,7 +255,7 @@ function control_player(pl)
 	
 end
 
-function _update()
+function _directions.update()
 	control_player(pl)
 	foreach(actor, move_actor)
 end
