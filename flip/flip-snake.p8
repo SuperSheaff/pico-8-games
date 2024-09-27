@@ -15,6 +15,9 @@ __lua__
 -- apple spawning, rendering
 #include core/apple.lua
 
+-- curse selection, curse activation
+#include core/curses.lua
+
 -- user interface rendering
 #include ui/ui.lua
 

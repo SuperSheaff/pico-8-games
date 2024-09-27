@@ -15,7 +15,7 @@ function spawn_apple()
     end
     
     -- Check if the next apple should be golden
-    if next_apple_golden then
+    if next_apple_golden or test_mode then
         apple.sprite_id = sprites.golden_apple
         apple.is_golden = true
         next_apple_golden = false -- Reset the flag after spawning golden apple
@@ -27,7 +27,7 @@ function spawn_apple()
     -- Apple drawing function
     function apple:draw()
         -- Check the current state of the apple
-        if not apple_invisible_curse_active or self.state == "visible" then
+        if not invisible_apples or self.state == "visible" then
             -- Draw the normal or golden apple sprite
             spr(self.sprite_id, self.x * grid_size, self.y * grid_size)
         elseif self.state == "semi-transparent" then
@@ -39,16 +39,16 @@ function spawn_apple()
 
     -- Apple update function for handling invisible apple curse
     function apple:update()
-        if apple_invisible_curse_active then
+        if invisible_apples then
             if self.state == "visible" then
                 self.timer += 1
-                if self.timer >= 30 then -- 1 second delay (assuming 30 FPS)
+                if self.timer >= 15 then -- 1 second delay (assuming 30 FPS)
                     self.state = "semi-transparent"
                     self.timer = 0
                 end
             elseif self.state == "semi-transparent" then
                 self.timer += 1
-                if self.timer >= 30 then -- 1 second delay
+                if self.timer >= 15 then -- 1 second delay
                     self.state = "invisible"
                     self.timer = 0
                 end

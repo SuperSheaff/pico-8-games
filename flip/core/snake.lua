@@ -9,6 +9,7 @@ function spawn_snake(initial_length)
         dy = 0,
         direction = directions.right,
         reversed = false,
+        invisible = false,
         body = {}
     }
 
@@ -123,11 +124,11 @@ function spawn_snake(initial_length)
         local is_golden = apple.is_golden
     
         if is_golden then
-            -- enter choose option state
-            game_state = "choose_option"
+            -- enter choose curse state
+            game_state = "choose_curse"
             sfx(1) -- play sound when eating a golden apple
         else
-            sfx(0) -- play sound when eating a regular apple
+            sfx(sounds.eat_apple) -- play sound when eating a regular apple
         end
     
         -- temporarily store the new part information to be added after update

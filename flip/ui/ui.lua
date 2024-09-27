@@ -104,11 +104,10 @@ function ui:reset_flash_state()
     flash.state = false
 end
 
--- function to draw the option selection screen
-function ui:draw_option_screen()
-    -- Ensure selected_options is populated
-    if #selected_options < 2 then
-        print("Error: selected_options not properly initialized.", 10, 10, 8)
+-- function to draw the curse selection screen
+function ui:draw_curse_screen()
+    -- Ensure selected_curses is populated
+    if #selected_curses < 2 then
         return
     end
 
@@ -126,52 +125,52 @@ function ui:draw_option_screen()
     local rect_width = ui_width
     local rect_height = (ui_height / 2) - (gap / 2) - 3
 
-    -- Calculate positions for option 1 and option 2 rectangles
-    local option1_rect_x = border_x + 1
-    local option1_rect_y = border_y + 1
-    local option2_rect_x = border_x + 1
-    local option2_rect_y = border_y + rect_height + gap + 10
+    -- Calculate positions for curse 1 and curse 2 rectangles
+    local curse1_rect_x = border_x + 1
+    local curse1_rect_y = border_y + 1
+    local curse2_rect_x = border_x + 1
+    local curse2_rect_y = border_y + rect_height + gap + 10
 
-    -- Draw the white background rectangles for each option
-    rectfill(option1_rect_x, option1_rect_y, option1_rect_x + rect_width, option1_rect_y + rect_height, 7)
-    rectfill(option2_rect_x, option2_rect_y, option2_rect_x + rect_width, option2_rect_y + rect_height, 7)
+    -- Draw the white background rectangles for each curse
+    rectfill(curse1_rect_x, curse1_rect_y, curse1_rect_x + rect_width, curse1_rect_y + rect_height, 7)
+    rectfill(curse2_rect_x, curse2_rect_y, curse2_rect_x + rect_width, curse2_rect_y + rect_height, 7)
 
-    -- Extract the name and count for each option
-    local option1_name = selected_options[1].option.text
-    local option1_count = "for \f8" .. selected_options[1].count .. "\f0 apples"
-    local option2_name = selected_options[2].option.text
-    local option2_count = "for \f8" .. selected_options[2].count .. "\f0 apples"
+    -- Extract the name and count for each curse
+    local curse1_name = selected_curses[1].curse.text
+    local curse1_count = "for \f8" .. selected_curses[1].count .. "\f0 apples"
+    local curse2_name = selected_curses[2].curse.text
+    local curse2_count = "for \f8" .. selected_curses[2].count .. "\f0 apples"
 
     -- Calculate widths for centering
-    local text_width_1_name = #option1_name * 4
-    local text_width_1_count = #option1_count * 4
-    local text_width_2_name = #option2_name * 4
-    local text_width_2_count = #option2_count * 4
+    local text_width_1_name = #curse1_name * 4
+    local text_width_1_count = #curse1_count * 4
+    local text_width_2_name = #curse2_name * 4
+    local text_width_2_count = #curse2_count * 4
 
     -- Calculate the vertical center of the rectangles
-    local center_y_1 = option1_rect_y + (rect_height / 2) - 7 -- Adjust for two lines of text (approx. 7 pixels height)
-    local center_y_2 = option2_rect_y + (rect_height / 2) - 7 -- Adjust for two lines of text (approx. 7 pixels height)
+    local center_y_1 = curse1_rect_y + (rect_height / 2) - 7 -- Adjust for two lines of text (approx. 7 pixels height)
+    local center_y_2 = curse2_rect_y + (rect_height / 2) - 7 -- Adjust for two lines of text (approx. 7 pixels height)
 
-    -- Print the first option (two lines)
-    print(option1_name, option1_rect_x + (rect_width / 2) - (text_width_1_name / 2), center_y_1, 0)
-    print(option1_count, option1_rect_x + (rect_width / 2) - (text_width_1_count / 2) + 8, center_y_1 + 8, 0)
+    -- Print the first curse (two lines)
+    print(curse1_name, curse1_rect_x + (rect_width / 2) - (text_width_1_name / 2), center_y_1, 0)
+    print(curse1_count, curse1_rect_x + (rect_width / 2) - (text_width_1_count / 2) + 8, center_y_1 + 8, 0)
 
-    -- Print the second option (two lines)
-    print(option2_name, option2_rect_x + (rect_width / 2) - (text_width_2_name / 2), center_y_2, 0)
-    print(option2_count, option2_rect_x + (rect_width / 2) - (text_width_2_count / 2) + 8, center_y_2 + 8, 0)
+    -- Print the second curse (two lines)
+    print(curse2_name, curse2_rect_x + (rect_width / 2) - (text_width_2_name / 2), center_y_2, 0)
+    print(curse2_count, curse2_rect_x + (rect_width / 2) - (text_width_2_count / 2) + 8, center_y_2 + 8, 0)
 
-    -- Draw the selector box around the selected option
-    if selected_option == 1 then
-        rect(option1_rect_x, option1_rect_y, option1_rect_x + rect_width, option1_rect_y + rect_height, 8)
-    elseif selected_option == 2 then
-        rect(option2_rect_x, option2_rect_y, option2_rect_x + rect_width, option2_rect_y + rect_height, 8)
+    -- Draw the selector box around the selected curse
+    if selected_curse == 1 then
+        rect(curse1_rect_x, curse1_rect_y, curse1_rect_x + rect_width, curse1_rect_y + rect_height, 8)
+    elseif selected_curse == 2 then
+        rect(curse2_rect_x, curse2_rect_y, curse2_rect_x + rect_width, curse2_rect_y + rect_height, 8)
     end
 
     -- Draw "or" in the middle of the screen, centered vertically
     local or_text = "or"
     local or_text_width = #or_text * 4 -- width of the text "or" in pixels (4 pixels per character)
     local or_x = (screen_size - or_text_width) / 2 -- center of the screen minus half the text width
-    local or_y = screen_size / 2 - 3 -- adjust y-position to center vertically between options
+    local or_y = screen_size / 2 - 3 -- adjust y-position to center vertically between curses
     print(or_text, or_x, or_y, 7)
 
 end
