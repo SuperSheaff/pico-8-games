@@ -1,68 +1,99 @@
 -- apple.lua
 
--- Function to create an apple at a random position
+-- function to create an apple at a random position
 function spawn_apple()
     local apple = {}
     local valid_position = false
     
-    -- Keep generating a new position until it's valid
+    -- keep generating a new position until it's valid
     while not valid_position do
         apple.x = flr(rnd((screen_size - border_size * 2) / grid_size)) + (border_size / grid_size)
         apple.y = flr(rnd((screen_size - border_size * 2 - score_bar.height) / grid_size)) + (border_size / grid_size)
         
-        -- Check if the new apple position is valid
+        -- check if the new apple position is valid
         valid_position = is_empty_position(apple.x, apple.y)
     end
     
-    -- Check if the next apple should be golden
+    -- check if the next apple should be golden
     if next_apple_golden or test_mode then
         apple.sprite_id = sprites.golden_apple
         apple.is_golden = true
-        next_apple_golden = false -- Reset the flag after spawning golden apple
+        next_apple_golden = false -- reset the flag after spawning golden apple
     else
         apple.sprite_id = sprites.apple
         apple.is_golden = false
     end
 
-    -- Apple drawing function
+    -- function to draw the apple
     function apple:draw()
-        -- Check the current state of the apple
-        if not invisible_apples or self.state == "visible" then
-            -- Draw the normal or golden apple sprite
-            spr(self.sprite_id, self.x * grid_size, self.y * grid_size)
-        elseif self.state == "semi-transparent" then
-            -- Draw the semi-transparent apple sprite
-            spr(sprites.semi_transparent_apple, self.x * grid_size, self.y * grid_size)
+        -- choose the correct sprite based on state and type
+        local sprite_to_draw = get_apple_sprite(self)
+        if sprite_to_draw then
+            spr(sprite_to_draw, self.x * grid_size, self.y * grid_size)
         end
-        -- Do not draw if state is "invisible" and curse is active
     end
 
-    -- Apple update function for handling invisible apple curse
+    -- function to update the apple state
     function apple:update()
         if invisible_apples then
-            if self.state == "visible" then
-                self.timer += 1
-                if self.timer >= 15 then -- 1 second delay (assuming 30 FPS)
-                    self.state = "semi-transparent"
-                    self.timer = 0
-                end
-            elseif self.state == "semi-transparent" then
-                self.timer += 1
-                if self.timer >= 15 then -- 1 second delay
-                    self.state = "invisible"
-                    self.timer = 0
-                end
-            end
+            update_apple_state(self)
         else
-            -- Reset state to visible if curse is not active
-            self.state = "visible"
-            self.timer = 0
+            reset_apple_state(self)
         end
     end
 
-    -- Initialize apple state and timer
+    -- initialize apple state and timer
     apple.state = "visible"
     apple.timer = 0
 
     return apple
+end
+
+-- function to set apple type (normal or golden)
+function set_apple_type(apple, type)
+    if type == "golden" then
+        apple.sprite_id = sprites.golden_apple
+        apple.is_golden = true
+    else
+        apple.sprite_id = sprites.apple
+        apple.is_golden = false
+    end
+end
+
+-- function to get the correct apple sprite based on state and type
+function get_apple_sprite(apple)
+    if not invisible_apples or apple.state == "visible" then
+        return apple.sprite_id -- normal or golden apple sprite
+    elseif apple.state == "semi-transparent" then
+        if apple.is_golden then
+            return sprites.semi_golden_apple -- semi-transparent golden apple
+        else
+            return sprites.semi_apple -- semi-transparent normal apple
+        end
+    else
+        return nil -- invisible state, do not draw
+    end
+end
+
+-- function to update apple state during invisible apple curse
+function update_apple_state(apple)
+    if apple.state == "visible" then
+        apple.timer += 1
+        if apple.timer >= 15 then -- 1 second delay (assuming 30 fps)
+            apple.state = "semi-transparent"
+            apple.timer = 0
+        end
+    elseif apple.state == "semi-transparent" then
+        apple.timer += 1
+        if apple.timer >= 15 then -- 1 second delay
+            apple.state = "invisible"
+            apple.timer = 0
+        end
+    end
+end
+
+-- function to reset apple state when curse is not active
+function reset_apple_state(apple)
+    apple.state = "visible"
+    apple.timer = 0
 end

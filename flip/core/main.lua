@@ -5,14 +5,12 @@ function _init()
     reset_game_state()
 end
 
--- native update
+-- native update, pseudo state machine
 function _update()
     if game_state == "play" then
-        if not game_over then
-            update_game()
-        else
-            update_game_over()
-        end
+        update_game()
+    elseif game_state == "game_over" then
+        update_game_over()
     elseif game_state == "choose_curse" then
         handle_curse_selection()
     elseif game_state == "resume_delay" then
@@ -22,72 +20,72 @@ end
 
 -- native draw
 function _draw()
-    cls(background_color) -- clear background color
+    cls(background_color) -- clear the background with the specified color
 
-    -- always draw the game and UI
-    ui:draw_border()
-    ui:handle_score()
+    ui:draw_border()    -- draw the ui
+    ui:handle_score()   -- draw the score
+    apple:draw()        -- draw the apple
+    draw_spikes()       -- draw all active spikes
+    snake:draw()        -- draw the snake
 
-    -- draw the apple (only one apple at a time)
-    apple:draw()
-
-    -- Draw all active spikes using their draw methods
-    for spike in all(spikes) do
-        spike:draw()
+    -- handle drawing for game over state
+    if game_state == "game_over" then
+        ui:draw_game_over_effects() -- draw game over effects
     end
 
-    snake:draw()
-
-
-    if game_over then
-        ui:draw_game_over_effects() -- handle game over drawing
-    end
-
-    -- draw curse screen on top if in choose_curse state
+    -- draw the curse selection screen if in choose_curse state
     if game_state == "choose_curse" then
         ui:draw_curse_screen() -- draw curses over the game
     end
 end
 
--- initialize game variables
+-- reset the game state to its initial values
 function reset_game_state()
-    ticks           = 0
-    sound_ticks     = 0 -- initialize sound tick counter
-    score           = 0 -- initialize score to 0
-    update_rate     = base_update_rate -- reset game speed to base value
-    snake           = spawn_snake(5)
-    apple           = spawn_apple() -- only one apple at a time
-    active_curses   = {}
-    invisible_apples = false
-    next_apple_golden = false
-    game_over       = false
+    -- game variables
+    ticks               = 0 -- reset game ticks
+    sound_ticks         = 0 -- reset sound tick counter
+    score               = 0 -- reset score to 0
+    update_rate         = base_update_rate -- set game speed to base value
+    snake               = spawn_snake(5) -- create a new snake with initial length
+    apple               = spawn_apple() -- spawn the first apple
+    active_curses       = {}    -- clear active curses
+    invisible_apples    = false -- reset invisible apple curse state
+    next_apple_golden   = false -- reset golden apple state
+
+    -- initialize game state to play
+    game_state = "play"
+
+    -- remove spikes and reset the UI flash state
     remove_spikes()
     ui:reset_flash_state()
 end
 
+-- update the game when in play state
 function update_game()
-    -- handle input and update game state
+    -- handle snake input and update game state
     handle_snake_input()
-    apple:update()
+    apple:update() -- update apple state
 
     -- update game objects based on ticks
     ticks += 1
     if ticks >= update_rate then
-        snake:update()
+        snake:update() -- update snake position and state
         ticks = 0
 
-        -- increment sound_ticks and play sound if needed
+        -- play a sound every few ticks
         sound_ticks += 1
         if sound_ticks >= 4 then
             sfx(sounds.game_tick) -- play tick sound effect
-            sound_ticks = 0 -- reset sound counter
+            sound_ticks = 0 -- reset sound tick counter
         end
     end
 end
 
+
+-- handle the game over state and restart option
 function update_game_over()
     if flash.count < flash.max_count then
-        ui:update_flash_effect() -- handle flash updates
+        ui:update_flash_effect() -- handle the flashing effect during game over
     else
         -- restart game on pressing X after flashing ends
         if btnp(5) then -- button X
@@ -96,26 +94,27 @@ function update_game_over()
     end
 end
 
+-- handle the delay before resuming the game after selecting a curse
 function update_resume_delay()
-    -- Decrement the delay timer
+    -- decrement the resume delay timer
     if resume_delay > 0 then
         resume_delay -= 1
     end
 
-    -- If the delay timer reaches zero, resume the game
+    -- resume the game once the delay timer reaches zero
     if resume_delay <= 0 then
         game_state = "play"
     end
 end
 
--- Check if a position is empty
+-- check if a position is empty and valid for placing objects
 function is_empty_position(x, y)
-    -- Check against the snake's head if snake is initialized
+    -- check if position overlaps with the snake's head
     if snake and x == snake.x and y == snake.y then
         return false
     end
 
-    -- Check against the snake's body if snake is initialized
+    -- check if position overlaps with the snake's body
     if snake then
         for part in all(snake.body) do
             if x == part.x and y == part.y then
@@ -124,13 +123,13 @@ function is_empty_position(x, y)
         end
     end
 
-    -- Check against existing spikes
+    -- check if position overlaps with existing spikes
     for spike in all(spikes) do
         if x == spike.x and y == spike.y then
             return false
         end
     end
 
-    -- Additional checks can be added here in the future
+    -- position is empty and valid
     return true
 end

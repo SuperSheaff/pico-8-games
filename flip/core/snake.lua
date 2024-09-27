@@ -2,15 +2,16 @@
 
 -- function to create a snake in the middle of the screen with a given initial length
 function spawn_snake(initial_length)
+    -- create the snake object with initial properties
     local snake = {
-        x = flr((screen_size / grid_size) / 2),
-        y = flr((screen_size / grid_size - score_bar.height / grid_size) / 2) + (score_bar.height / grid_size),
-        dx = 1,
+        x = flr((screen_size / grid_size) / 2), -- initial x position (centered)
+        y = flr((screen_size / grid_size - score_bar.height / grid_size) / 2) + (score_bar.height / grid_size), -- initial y position (centered below score bar)
+        dx = 1, -- initial movement direction (right)
         dy = 0,
-        direction = directions.right,
-        reversed = false,
-        invisible = false,
-        body = {}
+        direction = directions.right, -- initial facing direction (right)
+        reversed = false, -- initial state for reverse controls
+        invisible = false, -- initial state for invisible body
+        body = {} -- body parts of the snake
     }
 
     -- add initial body parts behind the head
@@ -18,29 +19,27 @@ function spawn_snake(initial_length)
         add(snake.body, {
             x = snake.x - i, -- position body parts to the left of the head
             y = snake.y,
-            direction = directions.right,
-            prev_direction = directions.right
+            direction = directions.right, -- initial direction of each part
+            prev_direction = directions.right -- previous direction for each part
         })
     end
 
-    -- draw the snake
+    -- function to draw the snake
     function snake:draw()
-        -- draw snake head sprite based on direction
+        -- draw snake head sprite based on current direction
         draw_snake_part(self.x, self.y, self.direction, sprites.head_horizontal, sprites.head_vertical)
         
-        -- draw snake body except the last segment
+        -- draw snake body except the last segment if not invisible
         if not snake.invisible then
             for i = 1, #self.body - 1 do
                 local part = self.body[i]
                 local next_part = self.body[i + 1] or {direction = self.direction}
         
-                -- check if this part is a corner
+                -- check if this part is a corner based on direction change
                 if i ~= #self.body and part.direction ~= part.prev_direction then
-                    -- determine flipping for the corner sprite based on direction change
-                    draw_corner_part(part.x, part.y, part.prev_direction, part.direction)
+                    draw_corner_part(part.x, part.y, part.prev_direction, part.direction) -- draw corner
                 else
-                    -- draw body sprite based on direction
-                    draw_snake_part(part.x, part.y, part.direction, sprites.body_horizontal, sprites.body_vertical)
+                    draw_snake_part(part.x, part.y, part.direction, sprites.body_horizontal, sprites.body_vertical) -- draw body part
                 end
             end
         end
@@ -52,9 +51,10 @@ function spawn_snake(initial_length)
         end
     end
     
-    -- update the snake position and check for collisions
+    -- function to update the snake position and state
     function snake:update()
-        if game_over then return end -- skip update if game over
+        -- skip update if in game over state
+        if game_state == "game_over" then return end
     
         -- store the previous head position and direction
         local prev_x = self.x
@@ -74,17 +74,17 @@ function spawn_snake(initial_length)
         -- check for collision with border
         if self.x < border_size / grid_size or self.x >= (screen_size - border_size) / grid_size or 
             self.y < border_size / grid_size or self.y >= (screen_size - border_size) / grid_size then
-            ui:start_game_over_sequence() -- start game over sequence
+            ui:start_game_over_sequence() -- start game over sequence if snake hits the border
         end
     
         -- check for collision with self
         for part in all(self.body) do
             if self.x == part.x and self.y == part.y then
-                ui:start_game_over_sequence() -- start game over sequence
+                ui:start_game_over_sequence() -- start game over sequence if snake hits itself
             end
         end
 
-        -- Check for collision with spikes
+        -- check for collision with spikes
         check_snake_spike_collision()
     
         -- update body positions to follow the head
@@ -119,16 +119,15 @@ function spawn_snake(initial_length)
         last_direction = self.direction
     end
 
-    -- handle snake eating an apple
+    -- function to handle snake eating an apple
     function snake:eat_apple(prev_x, prev_y)
         local is_golden = apple.is_golden
     
         if is_golden then
-            -- enter choose curse state
-            game_state = "choose_curse"
-            sfx(1) -- play sound when eating a golden apple
+            game_state = "choose_curse" -- enter choose curse state
+            sfx(sounds.golden_apple) -- play sound for golden apple
         else
-            sfx(sounds.eat_apple) -- play sound when eating a regular apple
+            sfx(sounds.eat_apple) -- play sound for regular apple
         end
     
         -- temporarily store the new part information to be added after update
@@ -150,7 +149,8 @@ function spawn_snake(initial_length)
             next_apple_golden = false
         end
     
-        check_curse_end()
+        check_curse_end() -- check if any curse has ended
+
         -- increment apples eaten and create a new apple
         apples_eaten += 1
         apple = spawn_apple()
@@ -161,13 +161,13 @@ end
 
 -- handle snake input for movement
 function handle_snake_input()
-    -- Determine the input directions based on whether controls are reversed
+    -- determine the input directions based on whether controls are reversed
     local left = snake.reversed and 1 or 0
     local right = snake.reversed and 0 or 1
     local up = snake.reversed and 3 or 2
     local down = snake.reversed and 2 or 3
 
-    -- Left input
+    -- left input
     if btn(left) and snake.dx == 0 then
         if last_direction ~= directions.right then
             snake.dx = -1
@@ -175,7 +175,7 @@ function handle_snake_input()
             snake.direction = directions.left
         end
 
-    -- Right input
+    -- right input
     elseif btn(right) and snake.dx == 0 then
         if last_direction ~= directions.left then
             snake.dx = 1
@@ -183,7 +183,7 @@ function handle_snake_input()
             snake.direction = directions.right
         end
 
-    -- Up input
+    -- up input
     elseif btn(up) and snake.dy == 0 then
         if last_direction ~= directions.down then
             snake.dx = 0
@@ -191,7 +191,7 @@ function handle_snake_input()
             snake.direction = directions.up
         end
 
-    -- Down input
+    -- down input
     elseif btn(down) and snake.dy == 0 then
         if last_direction ~= directions.up then
             snake.dx = 0
@@ -241,11 +241,12 @@ function draw_corner_part(x, y, prev_direction, direction)
     spr(sprites.corner, x * grid_size, y * grid_size, 1, 1, flip_x, flip_y)
 end
 
--- Check if the snake collides with any spike
+-- check if the snake collides with any spike
 function check_snake_spike_collision()
     for spike in all(spikes) do
         if snake.x == spike.x and snake.y == spike.y then
-            ui:start_game_over_sequence() -- Trigger the game over sequence
+            ui:start_game_over_sequence() -- trigger the game over sequence
         end
     end
 end
+    

@@ -31,7 +31,7 @@ end
 
 -- start the game over sequence with flashing effect
 function ui:start_game_over_sequence()
-    game_over = true
+    game_state = "game_over"
     flash.count = 0 -- reset flash counter
     flash.state = false -- reset flash state
     flash.timer = 0 -- reset flash timer
@@ -106,71 +106,74 @@ end
 
 -- function to draw the curse selection screen
 function ui:draw_curse_screen()
-    -- Ensure selected_curses is populated
+    -- ensure selected_curses is populated
     if #selected_curses < 2 then
         return
     end
 
-    -- Define UI border dimensions and gap
+    -- define UI border dimensions and gap
     local border_x = border_size
     local border_y = border_size
     local ui_width = screen_size - border_size * 2 - 3 -- reduce width by 2 (1 pixel on each side)
     local ui_height = screen_size - border_size * 2 - 6 -- reduce height by 2 (1 pixel on each side)
-    local gap = 1
 
-    -- Draw black rectangle to cover snake and background elements
+    -- draw black rectangle to cover snake and background elements
     rectfill(border_x, border_y, border_x + ui_width + 1, border_y + ui_height + 4, 0)
 
-    -- Calculate rectangle dimensions
+    -- calculate rectangle dimensions
     local rect_width = ui_width
-    local rect_height = (ui_height / 2) - (gap / 2) - 3
+    local rect_height = (ui_height / 2) - 4 -- Adjust height for gap and alignment
 
-    -- Calculate positions for curse 1 and curse 2 rectangles
-    local curse1_rect_x = border_x + 1
+    -- calculate positions for curse 1 and curse 2 rectangles
     local curse1_rect_y = border_y + 1
-    local curse2_rect_x = border_x + 1
-    local curse2_rect_y = border_y + rect_height + gap + 10
+    local curse2_rect_y = curse1_rect_y + rect_height + 10
 
-    -- Draw the white background rectangles for each curse
-    rectfill(curse1_rect_x, curse1_rect_y, curse1_rect_x + rect_width, curse1_rect_y + rect_height, 7)
-    rectfill(curse2_rect_x, curse2_rect_y, curse2_rect_x + rect_width, curse2_rect_y + rect_height, 7)
+    -- draw the curses
+    ui:draw_curse_box(selected_curses[1], border_x + 1, curse1_rect_y, rect_width, rect_height, selected_curse == 1)
+    ui:draw_curse_box(selected_curses[2], border_x + 1, curse2_rect_y, rect_width, rect_height + 1, selected_curse == 2)
 
-    -- Extract the name and count for each curse
-    local curse1_name = selected_curses[1].curse.text
-    local curse1_count = "for \f8" .. selected_curses[1].count .. "\f0 apples"
-    local curse2_name = selected_curses[2].curse.text
-    local curse2_count = "for \f8" .. selected_curses[2].count .. "\f0 apples"
-
-    -- Calculate widths for centering
-    local text_width_1_name = #curse1_name * 4
-    local text_width_1_count = #curse1_count * 4
-    local text_width_2_name = #curse2_name * 4
-    local text_width_2_count = #curse2_count * 4
-
-    -- Calculate the vertical center of the rectangles
-    local center_y_1 = curse1_rect_y + (rect_height / 2) - 7 -- Adjust for two lines of text (approx. 7 pixels height)
-    local center_y_2 = curse2_rect_y + (rect_height / 2) - 7 -- Adjust for two lines of text (approx. 7 pixels height)
-
-    -- Print the first curse (two lines)
-    print(curse1_name, curse1_rect_x + (rect_width / 2) - (text_width_1_name / 2), center_y_1, 0)
-    print(curse1_count, curse1_rect_x + (rect_width / 2) - (text_width_1_count / 2) + 8, center_y_1 + 8, 0)
-
-    -- Print the second curse (two lines)
-    print(curse2_name, curse2_rect_x + (rect_width / 2) - (text_width_2_name / 2), center_y_2, 0)
-    print(curse2_count, curse2_rect_x + (rect_width / 2) - (text_width_2_count / 2) + 8, center_y_2 + 8, 0)
-
-    -- Draw the selector box around the selected curse
-    if selected_curse == 1 then
-        rect(curse1_rect_x, curse1_rect_y, curse1_rect_x + rect_width, curse1_rect_y + rect_height, 8)
-    elseif selected_curse == 2 then
-        rect(curse2_rect_x, curse2_rect_y, curse2_rect_x + rect_width, curse2_rect_y + rect_height, 8)
-    end
-
-    -- Draw "or" in the middle of the screen, centered vertically
+    -- draw "or" in the middle of the screen, centered vertically
     local or_text = "or"
     local or_text_width = #or_text * 4 -- width of the text "or" in pixels (4 pixels per character)
     local or_x = (screen_size - or_text_width) / 2 -- center of the screen minus half the text width
     local or_y = screen_size / 2 - 3 -- adjust y-position to center vertically between curses
     print(or_text, or_x, or_y, 7)
-
 end
+
+-- function to draw a single curse box with title, name, and count
+function ui:draw_curse_box(curse_info, x, y, width, height, is_selected)
+    -- draw the white background rectangle
+    rectfill(x, y, x + width, y + height, 7)
+
+    -- extract the title, name, and count for the curse
+    local title = "curse of the " .. curse_info.curse.name -- you can modify the title as needed
+    local name = curse_info.curse.text
+    local count = "for \f8" .. curse_info.count .. "\f0 apples"
+
+    -- calculate widths for centering
+    local text_width_title = #title * 4
+    local text_width_name = #name * 4
+    local text_width_count = #count * 4
+
+    -- draw the title at the top
+    local title_y = y + 3
+    print(title, x + (width / 2) - (text_width_title / 2), title_y, 8)
+
+    -- draw a black line under the title
+    local line_y = title_y + 8
+    rectfill(x + 1, line_y, x + width - 1, line_y, 0)
+
+    -- calculate center for the name and count
+    local center_y = y + (height / 2) + 2
+
+    -- draw the name and count in the remaining space
+    print(name, x + (width / 2) - (text_width_name / 2), center_y - 4, 0)
+    print(count, x + (width / 2) - (text_width_count / 2), center_y + 4, 0)
+
+    -- draw the selector box if this curse is selected
+    if is_selected then
+        rect(x - 1, y - 1, x + width + 1, y + height + 1, 8)
+    end
+end
+    
+    
