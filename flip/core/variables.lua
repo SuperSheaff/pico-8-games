@@ -6,7 +6,7 @@ base_update_rate = 5                   -- base speed for the snake movement, adj
 update_rate = base_update_rate         -- current speed of the snake, which can change with curses
 screen_size = 128                      -- size of the game screen in pixels
 
-test_mode = true                      -- set this to true to only spawn golden apples for testing purposes
+test_mode = false                      -- set this to true to only spawn golden apples for testing purposes
 
 -- border and score bar
 border_size = 8                        -- thickness of the border around the play area
@@ -19,17 +19,19 @@ background_color = 0                   -- background color of the game screen
 
 -- sprite ids
 sprites = {                            
-    tail_horizontal         = 1,       -- id for horizontal snake tail sprite
-    body_horizontal         = 2,       -- id for horizontal snake body sprite
-    head_horizontal         = 3,       -- id for horizontal snake head sprite
-    tail_vertical           = 17,      -- id for vertical snake tail sprite
-    body_vertical           = 18,      -- id for vertical snake body sprite
-    head_vertical           = 19,      -- id for vertical snake head sprite
-    corner                  = 4,       -- id for corner sprite (snake turns)
-    apple                   = 5,       -- id for regular apple sprite
-    golden_apple            = 6,       -- id for golden apple sprite
-    semi_apple              = 21,      -- id for semi-transparent apple sprite (used in invisible apple curse)
-    semi_golden_apple       = 22       -- id for semi-transparent golden apple sprite
+    tail_horizontal         = 1,        -- id for horizontal snake tail sprite
+    body_horizontal         = 2,        -- id for horizontal snake body sprite
+    head_horizontal         = 3,        -- id for horizontal snake head sprite
+    tail_vertical           = 17,       -- id for vertical snake tail sprite
+    body_vertical           = 18,       -- id for vertical snake body sprite
+    head_vertical           = 19,       -- id for vertical snake head sprite
+    corner                  = 4,        -- id for corner sprite (snake turns)
+    apple                   = 5,        -- id for regular apple sprite
+    golden_apple            = 6,        -- id for golden apple sprite
+    semi_apple              = 21,       -- id for semi-transparent apple sprite (used in invisible apple curse)
+    semi_golden_apple       = 22,       -- id for semi-transparent golden apple sprite
+    skull                   = 8,        -- id for skull sprite
+    poop                    = 9         -- id for poop sprite
 }
 
 -- sound ids
@@ -76,24 +78,34 @@ curses = {                             -- list of all possible curses
         effect = "invisible"           -- effect name to apply during gameplay
     },
     { 
-        name = "benny", 
+        name = "speedy", 
         text = "extra speed", 
         effect = "speed" 
     },
     { 
-        name = "benny", 
+        name = "spikey", 
         text = "spikes", 
         effect = "spikes" 
     },
     { 
-        name = "benny", 
+        name = "gabby", 
         text = "reverse controls", 
         effect = "reverse_controls" 
     },
     { 
-        name = "benny", 
+        name = "welly", 
         text = "invisible apple", 
         effect = "invisible_apple" 
+    },
+    { 
+        name = "headless", 
+        text = "invisible head", 
+        effect = "invisible_head" 
+    },
+    { 
+        name = "smelly", 
+        text = "stinky trail", 
+        effect = "smelly" 
     }
 }
 
@@ -105,6 +117,7 @@ active_effect       = nil              -- stores the current active effect appli
 
 -- spike variables
 spikes = {}                            -- table to hold all active spike objects on the screen
+poop_trail = {}                        -- table to store poop positions
 
 resume_delay = 0                       -- time in frames to wait before resuming the game after curse selection
 invisible_apples = false               -- flag to indicate if invisible apple curse is active

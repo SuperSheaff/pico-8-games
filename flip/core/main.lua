@@ -3,6 +3,9 @@
 -- native init
 function _init()
     reset_game_state()
+
+    -- enable_secret_palette()
+    poke(0x5f15, 129) 
 end
 
 -- native update, pseudo state machine
@@ -22,10 +25,15 @@ end
 function _draw()
     cls(background_color) -- clear the background with the specified color
 
+    -- draw checkerboard background
+    draw_checkerboard(0, 5) -- use color 1 for light squares and 5 for dark squares
+
+
     ui:draw_border()    -- draw the ui
     ui:handle_score()   -- draw the score
     apple:draw()        -- draw the apple
     draw_spikes()       -- draw all active spikes
+    draw_poop_trail()   -- draw all active poop
     snake:draw()        -- draw the snake
 
     -- handle drawing for game over state
@@ -55,8 +63,9 @@ function reset_game_state()
     -- initialize game state to play
     game_state = "play"
 
-    -- remove spikes and reset the UI flash state
+    -- remove spikes, poop and reset the UI flash state
     remove_spikes()
+    remove_poop()
     ui:reset_flash_state()
 end
 
@@ -74,7 +83,7 @@ function update_game()
 
         -- play a sound every few ticks
         sound_ticks += 1
-        if sound_ticks >= 4 then
+        if sound_ticks >= 2 then
             sfx(sounds.game_tick) -- play tick sound effect
             sound_ticks = 0 -- reset sound tick counter
         end
@@ -130,6 +139,38 @@ function is_empty_position(x, y)
         end
     end
 
+    -- check if position overlaps with existing spikes
+    for poop in all(poop_trail) do
+        if x == poop.x and y == poop.y then
+            return false
+        end
+    end
+
     -- position is empty and valid
     return true
+end
+
+-- function to draw a checkerboard pattern across the screen
+function draw_checkerboard(light_color, dark_color)
+    local start_x = border_size
+    local start_y = border_size
+    local end_x = screen_size - border_size
+    local end_y = screen_size - border_size
+
+    for x = start_x, end_x - grid_size, grid_size do
+        for y = start_y, end_y - grid_size, grid_size do
+            -- determine if the square should be light or dark
+            local is_light_square = ((x - start_x) / grid_size + (y - start_y) / grid_size) % 2 == 0
+            local color = is_light_square and light_color or dark_color
+            -- draw the 8x8 square
+            rectfill(x, y, x + grid_size - 1, y + grid_size - 1, color)
+        end
+    end
+end
+
+function enable_secret_palette()
+    -- Load the secret colors into the screen palette
+    for i=0,15 do
+        poke(0x5f10 + i, 128 + i) -- Load secret colors from 128 to 143 into palette
+    end
 end

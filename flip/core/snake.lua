@@ -10,7 +10,8 @@ function spawn_snake(initial_length)
         dy = 0,
         direction = directions.right, -- initial facing direction (right)
         reversed = false, -- initial state for reverse controls
-        invisible = false, -- initial state for invisible body
+        invisible_body = false, -- initial state for invisible body
+        invisible_head = false, -- initial state for invisible body
         body = {} -- body parts of the snake
     }
 
@@ -26,11 +27,14 @@ function spawn_snake(initial_length)
 
     -- function to draw the snake
     function snake:draw()
-        -- draw snake head sprite based on current direction
-        draw_snake_part(self.x, self.y, self.direction, sprites.head_horizontal, sprites.head_vertical)
-        
+
+        if not snake.invisible_head then
+            -- draw snake head sprite based on current direction
+            draw_snake_part(self.x, self.y, self.body[1].direction, sprites.head_horizontal, sprites.head_vertical)
+        end
+
         -- draw snake body except the last segment if not invisible
-        if not snake.invisible then
+        if not snake.invisible_body then
             for i = 1, #self.body - 1 do
                 local part = self.body[i]
                 local next_part = self.body[i + 1] or {direction = self.direction}
@@ -64,6 +68,11 @@ function spawn_snake(initial_length)
         -- move the snake exactly one grid size at a time
         self.x = self.x + self.dx
         self.y = self.y + self.dy
+
+        -- leave a poop trail if the curse is active
+        if self.smelly then
+            leave_poop_trail()
+        end
     
         -- update head direction based on movement
         if self.dx == 1 then self.direction = directions.right end
@@ -73,7 +82,7 @@ function spawn_snake(initial_length)
     
         -- check for collision with border
         if self.x < border_size / grid_size or self.x >= (screen_size - border_size) / grid_size or 
-            self.y < border_size / grid_size or self.y >= (screen_size - border_size) / grid_size then
+           self.y < border_size / grid_size or self.y >= (screen_size - border_size) / grid_size then
             ui:start_game_over_sequence() -- start game over sequence if snake hits the border
         end
     
@@ -85,7 +94,7 @@ function spawn_snake(initial_length)
         end
 
         -- check for collision with spikes
-        check_snake_spike_collision()
+        check_snake_osbtacle_collision()
     
         -- update body positions to follow the head
         if #self.body > 0 then
@@ -242,11 +251,29 @@ function draw_corner_part(x, y, prev_direction, direction)
 end
 
 -- check if the snake collides with any spike
-function check_snake_spike_collision()
+function check_snake_osbtacle_collision()
     for spike in all(spikes) do
         if snake.x == spike.x and snake.y == spike.y then
             ui:start_game_over_sequence() -- trigger the game over sequence
         end
     end
+    for poop in all(poop_trail) do
+        if snake.x == poop.x and snake.y == poop.y then
+            ui:start_game_over_sequence() -- trigger the game over sequence
+        end
+    end
 end
-    
+
+-- function to leave a poop trail behind the snake
+function leave_poop_trail()
+    -- create a poop object at the tail's previous position
+    local tail = snake.body[#snake.body]
+    if tail then
+        local poop = {
+            x = tail.x,
+            y = tail.y,
+            sprite_id = sprites.poop
+        }
+        add(poop_trail, poop) -- Add the poop to the trail
+    end
+end

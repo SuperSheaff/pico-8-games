@@ -77,13 +77,17 @@ function apply_curse(selected_curse_index)
         apply_reverse_controls_curse()
     elseif curse == "invisible_apple" then
         apply_invisible_apple_curse()
+    elseif curse == "invisible_head" then
+        apply_invisible_head_curse()
+    elseif curse == "smelly" then
+        apply_smelly_curse()
     end
 end
 
 -- check if any active curse should end
 function check_curse_end()
     for curse in all(active_curses) do
-        if apples_eaten - curse.start_apples >= curse.required_apples then
+        if apples_eaten - curse.start_apples >= curse.required_apples - 1 then
             end_curse(curse.curse)
             del(active_curses, curse) -- remove from active curses
         end
@@ -102,17 +106,21 @@ function end_curse(curse)
         end_reverse_controls_curse()
     elseif curse == "invisible_apple" then
         end_invisible_apple_curse()
+    elseif curse == "invisible_head" then
+        end_invisible_head_curse()
+    elseif curse == "smelly" then
+        end_smelly_curse()
     end
 end
 
 -- apply invisible body curse
 function apply_invisible_body_curse()
-    snake.invisible = true
+    snake.invisible_body = true
 end
 
 -- end invisible body curse
 function end_invisible_body_curse()
-    snake.invisible = false
+    snake.invisible_body = false
 end
 
 -- apply extra speed curse
@@ -145,6 +153,27 @@ function end_invisible_apple_curse()
     invisible_apples = false
     apple.state = "visible"
     apple.timer = 0
+end
+
+-- apply invisible head curse
+function apply_invisible_head_curse()
+    snake.invisible_head = true
+end
+
+-- end invisible head curse
+function end_invisible_head_curse()
+    snake.invisible_head = false
+end
+
+-- apply invisible head curse
+function apply_smelly_curse()
+    snake.smelly = true
+end
+
+-- end invisible head curse
+function end_smelly_curse()
+    remove_poop()
+    snake.smelly = false
 end
 
 -- set a delay before resuming the game
@@ -201,4 +230,15 @@ function spawn_spike(x, y)
     end
 
     return spike
+end
+
+function draw_poop_trail()
+    for poop in all(poop_trail) do
+        spr(poop.sprite_id, poop.x * grid_size, poop.y * grid_size)
+    end
+end
+
+-- remove all spikes from the game area
+function remove_poop()
+    poop_trail = {}
 end
