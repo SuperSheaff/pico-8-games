@@ -4,7 +4,12 @@
 function spawn_apple()
     local apple = {}
     local valid_position = false
-    
+    local is_teleporting = false
+    local teleport_timer = 0
+    local flash_timer = 0
+    local flash_interval = 10
+    local flash_state = true
+
     -- keep generating a new position until it's valid
     while not valid_position do
         apple.x = flr(rnd((screen_size - border_size * 2) / grid_size)) + (border_size / grid_size)
@@ -26,10 +31,20 @@ function spawn_apple()
 
     -- function to draw the apple
     function apple:draw()
-        -- choose the correct sprite based on state and type
-        local sprite_to_draw = get_apple_sprite(self)
-        if sprite_to_draw then
-            spr(sprite_to_draw, self.x * grid_size, self.y * grid_size)
+        -- Determine if the apple should be drawn
+        local should_draw = true
+
+        -- If teleporting, use the flash state to determine visibility
+        if teleporting_apples and self.is_teleporting then
+            should_draw = self.flash_state
+        end
+
+        -- Draw the apple if it should be visible
+        if should_draw then
+            local sprite_to_draw = get_apple_sprite(self)
+            if sprite_to_draw then
+                spr(sprite_to_draw, self.x * grid_size, self.y * grid_size)
+            end
         end
     end
 
@@ -40,7 +55,71 @@ function spawn_apple()
         else
             reset_apple_state(self)
         end
+
+        -- Check for global teleporting_apples state
+        if teleporting_apples then
+            if not self.is_teleporting then
+                -- Start teleportation process if not already started
+                self:start_teleport()
+            end
+
+            -- Handle teleportation logic
+            if self.is_teleporting then
+                if self.teleport_timer > 0 then
+                    -- Waiting phase: keep the apple visible
+                    self.teleport_timer = self.teleport_timer - 1
+                    self.flash_state = true -- Ensure apple is visible during waiting
+                else
+                    -- Flashing phase
+                    self.flash_timer = self.flash_timer + 1
+                    if self.flash_timer >= self.flash_interval then
+                        self.flash_state = not self.flash_state
+                        self.flash_timer = 0
+                        -- Decrease the interval to make flashing faster
+                        if self.flash_interval > 1 then
+                            self.flash_interval = self.flash_interval - 1
+                        end
+                    end
+
+                    -- Check if flashing is done
+                    if self.flash_interval == 1 and not self.flash_state then
+                        self:teleport()
+                    end
+                end
+            end
+        end
     end
+
+    function apple:start_teleport()
+        self.is_teleporting = true
+        self.teleport_timer = 30 -- Wait for 1 second (60 frames at 60 FPS)
+        self.flash_timer = 0
+        self.flash_interval = 10
+    end
+
+    function apple:teleport()
+        local valid_position = false
+
+        -- Keep generating a new position until it's valid
+        while not valid_position do
+            -- Generate a random position within the screen bounds
+            local new_x = flr(rnd((screen_size - border_size * 2) / grid_size)) + (border_size / grid_size)
+            local new_y = flr(rnd((screen_size - border_size * 2 - score_bar.height) / grid_size)) + (border_size / grid_size)
+
+            -- Check if the new apple position is valid
+            valid_position = is_empty_position(new_x, new_y)
+
+            -- If valid, update the apple's position
+            if valid_position then
+                self.x = new_x
+                self.y = new_y
+            end
+        end
+
+        self.is_teleporting = false
+        self.flash_state = true -- Ensure apple is visible after teleporting
+    end
+    
 
     -- initialize apple state and timer
     apple.state = "visible"

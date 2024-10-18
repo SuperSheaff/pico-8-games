@@ -10,9 +10,13 @@ function spawn_snake(initial_length)
         dy = 0,
         direction = directions.right, -- initial facing direction (right)
         reversed = false, -- initial state for reverse controls
+        flipped = false, -- initial state for flip
         invisible_body = false, -- initial state for invisible body
         invisible_head = false, -- initial state for invisible body
-        body = {} -- body parts of the snake
+        body = {}, -- body parts of the snake
+        egg = false, -- initial state for egg
+        original_length = 0, -- To 
+        smelly = false -- initial state for smelly
     }
 
     -- add initial body parts behind the head
@@ -30,7 +34,7 @@ function spawn_snake(initial_length)
 
         if not snake.invisible_head then
             -- draw snake head sprite based on current direction
-            draw_snake_part(self.x, self.y, self.body[1].direction, sprites.head_horizontal, sprites.head_vertical)
+            draw_snake_part(self.x, self.y, self.body[1].direction, sprites.head_horizontal.active, sprites.head_vertical.active)
         end
 
         -- draw snake body except the last segment if not invisible
@@ -72,6 +76,11 @@ function spawn_snake(initial_length)
         -- leave a poop trail if the curse is active
         if self.smelly then
             leave_poop_trail()
+        end
+
+        -- lay an egg if the curse is active
+        if self.egg then
+            leave_egg_trail()
         end
     
         -- update head direction based on movement
@@ -138,16 +147,21 @@ function spawn_snake(initial_length)
         else
             sfx(sounds.eat_apple) -- play sound for regular apple
         end
-    
+
+        -- Handle snake flipping if the curse is active
+        if self.flipped then
+            self:flip()
+        end
+        
         -- temporarily store the new part information to be added after update
         local tail = self.body[#self.body]
         self.new_part = { 
             x = tail.x, 
             y = tail.y, 
-            direction = tail.direction, 
+            direction       = tail.direction, 
             prev_direction = tail.prev_direction 
         }
-    
+
         -- increment score by 2 points
         score += 2
     
@@ -160,9 +174,92 @@ function spawn_snake(initial_length)
     
         check_curse_end() -- check if any curse has ended
 
+        self.original_length = self.original_length + 1
+
         -- increment apples eaten and create a new apple
         apples_eaten += 1
         apple = spawn_apple()
+    end
+
+    -- new function to handle snake flipping
+    function snake:flip()
+        -- Check if the body exists and has elements
+        if not self.body or #self.body == 0 then
+            print("Error: Snake body is not initialized or empty.")
+            return
+        end
+
+        -- Reverse the body
+        local new_body = {}
+        local new_index = 1
+        for i = #self.body, 1, -1 do
+            local part = self.body[i]
+            new_body[new_index] = {
+                x = part.x,
+                y = part.y,
+                direction = opposite_direction(part.prev_direction),
+                prev_direction = opposite_direction(part.direction)
+            }
+            new_index = new_index + 1
+        end
+
+        -- Update snake properties
+        self.body = new_body
+        -- Set the head to the old tail's position
+        self.x = self.body[1].x
+        self.y = self.body[1].y
+        -- Set the direction to the opposite of the old tail's direction
+        self.direction = self.body[1].direction
+        self.dx = direction_to_dx(self.direction)
+        self.dy = direction_to_dy(self.direction)
+
+        -- Correct the direction of the first body part
+        if #self.body > 1 then
+            self.body[1].prev_direction = self.body[2].direction
+        end
+
+        -- Move the head one position forward
+        self:move_head_forward()
+
+        -- Initiate pause
+        is_paused = true
+        pause_timer = pause_duration    
+    end
+
+    -- function to move the head forward
+    function snake:move_head_forward()
+        if self.direction == directions.right then
+            self.x = self.x + 1
+        elseif self.direction == directions.left then
+            self.x = self.x - 1
+        elseif self.direction == directions.up then
+            self.y = self.y - 1
+        elseif self.direction == directions.down then
+            self.y = self.y + 1
+        end
+    end
+
+    function snake:activate_long_curse()
+        self.original_length = #self.body
+
+        -- Double the snake's length
+        local tail = self.body[#self.body]
+        for i = 1, self.original_length do
+            local new_part = {
+                x = tail.x,
+                y = tail.y,
+                direction = tail.direction,
+                prev_direction = tail.prev_direction
+            }
+            self.body[#self.body + 1] = new_part -- Manually add new part
+        end
+    end
+
+    function snake:deactivate_long_curse()
+        -- Revert to original length
+        for i = #self.body, self.original_length + 1, -1 do
+            self.body[i] = nil -- Manually remove part
+        end
     end
 
     return snake
@@ -262,6 +359,11 @@ function check_snake_osbtacle_collision()
             ui:start_game_over_sequence() -- trigger the game over sequence
         end
     end
+    for egg in all(egg_trail) do
+        if snake.x == egg.x and snake.y == egg.y then
+            ui:start_game_over_sequence() -- trigger the game over sequence
+        end
+    end
 end
 
 -- function to leave a poop trail behind the snake
@@ -277,3 +379,102 @@ function leave_poop_trail()
         add(poop_trail, poop) -- Add the poop to the trail
     end
 end
+
+-- Function to leave an egg trail behind the snake
+function leave_egg_trail()
+    -- Increment the movement counter
+    egg_counter = egg_counter + 1
+
+    -- Check if it's time to place an egg
+    if egg_counter >= egg_interval then
+        -- Create an egg object at the tail's previous position
+        local tail = snake.body[#snake.body]
+        if tail then
+            local egg = {
+                x = tail.x,
+                y = tail.y,
+                sprite_id = sprites.egg
+            }
+            add(egg_trail, egg) -- Add the egg to the trail
+        end
+
+        -- Reset the counter after placing an egg
+        egg_counter = 0
+    end
+end
+
+
+-- gets current head sprite
+function update_current_head_sprite()
+    if active_effect == "invisible" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.benny
+        sprites.head_vertical.active    = sprites.head_vertical.benny
+    elseif active_effect == "long" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.doug
+        sprites.head_vertical.active    = sprites.head_vertical.doug
+    elseif active_effect == "spikes" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.reno
+        sprites.head_vertical.active    = sprites.head_vertical.reno
+    elseif active_effect == "reverse_controls" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.gabby
+        sprites.head_vertical.active    = sprites.head_vertical.gabby
+    elseif active_effect == "invisible_apple" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.welly
+        sprites.head_vertical.active    = sprites.head_vertical.welly
+    elseif active_effect == "flip" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.bryce
+        sprites.head_vertical.active    = sprites.head_vertical.bryce
+    elseif active_effect == "teleport_apple" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.kell
+        sprites.head_vertical.active    = sprites.head_vertical.kell
+    elseif active_effect == "egg" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.jenna
+        sprites.head_vertical.active    = sprites.head_vertical.jenna
+    elseif active_effect == "speed" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.jaz
+        sprites.head_vertical.active    = sprites.head_vertical.jaz
+
+        
+    -- default sprite curses
+    elseif active_effect == "invisible_head" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.default
+        sprites.head_vertical.active    = sprites.head_vertical.default
+    elseif active_effect == "smelly" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.default
+        sprites.head_vertical.active    = sprites.head_vertical.default
+    elseif active_effect == "default" then
+        sprites.head_horizontal.active  = sprites.head_horizontal.default
+        sprites.head_vertical.active    = sprites.head_vertical.default
+    end
+
+end
+
+-- kell teleporting apple
+-- bryce flip snake
+
+-- helper function to get the opposite direction
+function opposite_direction(dir)
+    if dir == directions.right then return directions.left
+    elseif dir == directions.left then return directions.right
+    elseif dir == directions.up then return directions.down
+    elseif dir == directions.down then return directions.up
+    end
+end
+
+-- helper function to convert direction to dx
+function direction_to_dx(dir)
+    if dir == directions.right then return 1
+    elseif dir == directions.left then return -1
+    else return 0
+    end
+end
+
+-- helper function to convert direction to dy
+function direction_to_dy(dir)
+    if dir == directions.down then return 1
+    elseif dir == directions.up then return -1
+    else return 0
+    end
+end
+
+

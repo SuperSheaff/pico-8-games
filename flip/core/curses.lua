@@ -40,9 +40,18 @@ function shuffle_curses()
         deli(available_indices, random_index) -- remove selected index from available list
 
         local curse = curses[selected_index]
-        local count = flr(rnd(5)) + 1 -- generate a random count (1-5)
+        local min_apples = curse.apple_range.min
+        local max_apples = curse.apple_range.max
 
-        add(selected_curses, { curse = curse, count = count })
+        -- Calculate a bias factor based on the score
+        local bias_factor = score / 1000 -- Adjust this factor to control scaling
+        if bias_factor > 1 then bias_factor = 1 end -- Cap the bias factor at 1
+
+        -- Generate a weighted random count
+        local range = max_apples - min_apples
+        local weighted_random = flr(rnd(range * (1 - bias_factor))) + min_apples + flr(range * bias_factor)
+
+        add(selected_curses, { curse = curse, count = weighted_random })
     end
 end
 
@@ -67,12 +76,14 @@ function apply_curse(selected_curse_index)
         start_apples = apples_eaten
     })
 
+    active_effect = curse
+
     if curse == "invisible" then
         apply_invisible_body_curse()
     elseif curse == "speed" then
         apply_extra_speed_curse()
     elseif curse == "spikes" then
-        spawn_spikes(count)
+        spawn_spikes(10)
     elseif curse == "reverse_controls" then
         apply_reverse_controls_curse()
     elseif curse == "invisible_apple" then
@@ -81,7 +92,17 @@ function apply_curse(selected_curse_index)
         apply_invisible_head_curse()
     elseif curse == "smelly" then
         apply_smelly_curse()
+    elseif curse == "flip" then
+        apply_flip_curse()
+    elseif curse == "teleport_apple" then
+        apply_teleport_apple_curse()
+    elseif curse == "egg" then
+        apply_egg_curse()
+    elseif curse == "long" then
+        apply_long_curse()
     end
+
+    update_current_head_sprite()
 end
 
 -- check if any active curse should end
@@ -92,6 +113,13 @@ function check_curse_end()
             del(active_curses, curse) -- remove from active curses
         end
     end
+
+    -- check if there are no more active curses
+    if #active_curses == 0 then
+        active_effect = "default"
+    end
+
+    update_current_head_sprite()
 end
 
 -- end the specified curse effect
@@ -110,7 +138,15 @@ function end_curse(curse)
         end_invisible_head_curse()
     elseif curse == "smelly" then
         end_smelly_curse()
-    end
+    elseif curse == "flip" then
+        end_flip_curse()
+    elseif curse == "teleport_apple" then
+        end_teleport_apple_curse()
+    elseif curse == "egg" then
+        end_egg_curse()
+    elseif curse == "long" then
+        end_long_curse()
+    end 
 end
 
 -- apply invisible body curse
@@ -141,6 +177,47 @@ end
 -- end reverse controls curse
 function end_reverse_controls_curse()
     snake.reversed = false
+end
+
+-- apply teleport apple curse
+function apply_teleport_apple_curse()
+    teleporting_apples = true
+end
+
+-- end teleport apple curse
+function end_teleport_apple_curse()
+    teleporting_apples = false
+end
+
+-- apply flip curse
+function apply_flip_curse()
+    snake.flipped = true
+end
+
+-- end flip curse
+function end_flip_curse()
+    snake.flipped = false
+end
+
+-- apply egg curse
+function apply_egg_curse()
+    snake.egg = true
+end
+
+-- end egg curse
+function end_egg_curse()
+    remove_egg_trail()
+    snake.egg = false
+end
+
+-- apply long curse
+function apply_long_curse()
+    snake:activate_long_curse()
+end
+
+-- end long curse
+function end_long_curse()
+    snake:deactivate_long_curse()
 end
 
 -- apply invisible apple curse
@@ -238,7 +315,18 @@ function draw_poop_trail()
     end
 end
 
+function draw_egg_trail()
+    for egg in all(egg_trail) do
+        spr(egg.sprite_id, egg.x * grid_size, egg.y * grid_size)
+    end
+end
+
 -- remove all spikes from the game area
 function remove_poop()
     poop_trail = {}
+end
+
+-- remove all spikes from the game area
+function remove_egg_trail()
+    egg_trail = {}
 end

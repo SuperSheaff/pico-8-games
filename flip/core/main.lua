@@ -4,7 +4,7 @@
 function _init()
     reset_game_state()
 
-    -- enable_secret_palette()
+    -- swaps one of the colors
     poke(0x5f15, 129) 
 end
 
@@ -28,12 +28,12 @@ function _draw()
     -- draw checkerboard background
     draw_checkerboard(0, 5) -- use color 1 for light squares and 5 for dark squares
 
-
     ui:draw_border()    -- draw the ui
     ui:handle_score()   -- draw the score
     apple:draw()        -- draw the apple
     draw_spikes()       -- draw all active spikes
     draw_poop_trail()   -- draw all active poop
+    draw_egg_trail()   -- draw all active poop
     snake:draw()        -- draw the snake
 
     -- handle drawing for game over state
@@ -58,19 +58,34 @@ function reset_game_state()
     apple               = spawn_apple() -- spawn the first apple
     active_curses       = {}    -- clear active curses
     invisible_apples    = false -- reset invisible apple curse state
+    teleporting_apples  = false -- reset teleporting apple curse state
     next_apple_golden   = false -- reset golden apple state
+
 
     -- initialize game state to play
     game_state = "play"
 
+    active_effect = "default"
+    update_current_head_sprite()
+
     -- remove spikes, poop and reset the UI flash state
     remove_spikes()
     remove_poop()
+    remove_egg_trail()
     ui:reset_flash_state()
 end
 
 -- update the game when in play state
 function update_game()
+
+    if is_paused then
+        pause_timer = pause_timer - 1
+        if pause_timer <= 0 then
+            is_paused = false
+        end
+        return -- Skip the rest of the update logic while paused
+    end
+
     -- handle snake input and update game state
     handle_snake_input()
     apple:update() -- update apple state
@@ -139,9 +154,16 @@ function is_empty_position(x, y)
         end
     end
 
-    -- check if position overlaps with existing spikes
+    -- check if position overlaps with existing poop
     for poop in all(poop_trail) do
         if x == poop.x and y == poop.y then
+            return false
+        end
+    end
+
+    -- check if position overlaps with existing eggs
+    for egg in all(egg_trail) do
+        if x == egg.x and y == egg.y then
             return false
         end
     end
@@ -165,12 +187,5 @@ function draw_checkerboard(light_color, dark_color)
             -- draw the 8x8 square
             rectfill(x, y, x + grid_size - 1, y + grid_size - 1, color)
         end
-    end
-end
-
-function enable_secret_palette()
-    -- Load the secret colors into the screen palette
-    for i=0,15 do
-        poke(0x5f10 + i, 128 + i) -- Load secret colors from 128 to 143 into palette
     end
 end
