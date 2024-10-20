@@ -268,10 +268,10 @@ end
 -- handle snake input for movement
 function handle_snake_input()
     -- determine the input directions based on whether controls are reversed
-    local left = snake.reversed and 1 or 0
-    local right = snake.reversed and 0 or 1
-    local up = snake.reversed and 3 or 2
-    local down = snake.reversed and 2 or 3
+    local left      = snake.reversed and 1 or 0
+    local right     = snake.reversed and 0 or 1
+    local up        = snake.reversed and 3 or 2
+    local down      = snake.reversed and 2 or 3
 
     -- left input
     if btn(left) and snake.dx == 0 then
@@ -434,7 +434,7 @@ function update_current_head_sprite()
         sprites.head_horizontal.active  = sprites.head_horizontal.jaz
         sprites.head_vertical.active    = sprites.head_vertical.jaz
 
-        
+
     -- default sprite curses
     elseif active_effect == "invisible_head" then
         sprites.head_horizontal.active  = sprites.head_horizontal.default
