@@ -43,7 +43,9 @@ function spawn_apple()
         if should_draw then
             local sprite_to_draw = get_apple_sprite(self)
             if sprite_to_draw then
+                palt(0, false)
                 spr(sprite_to_draw, self.x * grid_size, self.y * grid_size)
+                palt(0, true)
             end
         end
     end

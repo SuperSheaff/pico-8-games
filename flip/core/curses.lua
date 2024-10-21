@@ -44,12 +44,17 @@ function shuffle_curses()
         local max_apples = curse.apple_range.max
 
         -- Calculate a bias factor based on the score
-        local bias_factor = score / 1000 -- Adjust this factor to control scaling
+        local bias_factor = score / 10 -- Adjust this factor to control scaling
         if bias_factor > 1 then bias_factor = 1 end -- Cap the bias factor at 1
 
         -- Generate a weighted random count
         local range = max_apples - min_apples
-        local weighted_random = flr(rnd(range * (1 - bias_factor))) + min_apples + flr(range * bias_factor)
+        local weighted_random = flr(rnd(range * (1 - bias_factor))) + min_apples
+
+        -- Further reduce the count early in the game
+        if score < 10 then
+            weighted_random = min_apples + flr(rnd((max_apples - min_apples) * 0.5))
+        end
 
         add(selected_curses, { curse = curse, count = weighted_random })
     end

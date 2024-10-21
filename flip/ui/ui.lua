@@ -24,7 +24,7 @@ function ui:handle_score()
     print("score: "..score, 7, 1, score_bar.text_color) -- display the current score
     
     -- draw game name
-    local game_name = "flip snake"
+    local game_name = "the serpent"
     local text_width = #game_name * 4 -- approximate width calculation
     print(game_name, screen_size - text_width - 6, 1, score_bar.text_color) -- display game name at top right
 end
@@ -39,33 +39,42 @@ end
 
 -- function to draw the game over screen
 function ui:draw_game_over_screen()
-    -- calculate dimensions for the "GAME OVER" box
-    local game_over_text = "game over"
-    local game_over_width = #game_over_text * 4 -- approximate width of each character
-    local game_over_height = 5 -- approximate height of text
-    local game_over_box_x = (screen_size - game_over_width - 5) / 2 -- centered x position
-    local game_over_box_y = 50 -- y position for the first box
-    local game_over_box_w = game_over_box_x + game_over_width + 5 -- width of the box
-    local game_over_box_h = game_over_box_y + game_over_height + 5 -- height of the box
+
+    cls(0)
+
+    ui:draw_background()
+
+    -- Define the sprite ID for the game over screen
+    local game_over_sprite_id = sprites.game_over  -- Replace with the actual sprite ID
+    local sprite_width = 64  -- Replace with the actual width of the sprite
+    local sprite_height = 32  -- Replace with the actual height of the sprite
+
+    -- Calculate the position to center the sprite on the screen
+    local sprite_x = (screen_size - sprite_width) / 2
+    local sprite_y = (screen_size - sprite_height) / 2
+
+    -- Draw the game over sprite
+    spr(game_over_sprite_id, 32, 16, 16, 5)
+
+    -- Display the score
+    local score_text = "you scored "..score
+    local score_width = #score_text * 4 -- approximate width of each character
+    local score_x = (screen_size - score_width) / 2
+    local score_y = 70 -- Position it below the game over sprite
+
+    -- Print the score text in white
+    print(score_text, score_x, score_y, 7)
+
+    -- Print the score number in green
+    print(score, score_x + (#"you scored " * 4), score_y, 11)
 
     -- calculate dimensions for the "press X to restart" box
     local instruction_text = "press X to restart"
     local instruction_width = #instruction_text * 4 -- approximate width of each character
     local instruction_height = 5 -- approximate height of text
-    local instruction_box_x = (screen_size - instruction_width - 5) / 2 -- centered x position
-    local instruction_box_y = game_over_box_y + 20 -- y position below the first box
-    local instruction_box_w = instruction_box_x + instruction_width + 5 -- width of the box
-    local instruction_box_h = instruction_box_y + instruction_height + 5 -- height of the box
 
-    -- draw background box for the "GAME OVER" text
-    rectfill(game_over_box_x, game_over_box_y, game_over_box_w, game_over_box_h, 7) -- white background box
-    -- draw "GAME OVER" in big text with black color
-    print(game_over_text, game_over_box_x + 4, game_over_box_y + 4, 0) -- position text inside the box with color 0 (black)
-    
-    -- draw background box for the instruction text
-    rectfill(instruction_box_x, instruction_box_y, instruction_box_w, instruction_box_h, 7) -- white background box
     -- display restart instruction with black color
-    print(instruction_text, instruction_box_x + 4, instruction_box_y + 4, 0) -- position text inside the box with color 0 (black)
+    print(instruction_text, (64 - instruction_width / 2) + 1, 100, 7) -- position text inside the box with color 0 (black)
 end
 
 -- function to draw the game over effects
@@ -237,4 +246,52 @@ function ui:draw_select_message()
 
     -- draw the message in black color
     print(message, message_x, message_y, 0)
+end
+
+function ui:draw_background()
+    local corner_sprite = sprites.background_corner -- Assuming this is the sprite ID for the corner
+    local edge_sprite_vertical = sprites.background_edge_vertical -- Assuming this is the sprite ID for the vertical edge
+    local edge_sprite_horizontal = sprites.background_edge_horizontal -- Assuming this is the sprite ID for the horizontal edge
+    local edge_size = 16 -- Size of the edge sprite in pixels
+    local inset = 0 -- Inset from the screen edges
+
+    -- Draw corners
+    -- Top-left corner (no flip)
+    spr(corner_sprite, inset, inset, 4, 4, false, false)
+
+    -- Top-right corner (flipped horizontally)
+    spr(corner_sprite, screen_size - 32 - inset, inset, 4, 4, true, false)
+
+    -- Bottom-left corner (flipped vertically)
+    spr(corner_sprite, inset, screen_size - 32 - inset, 4, 4, false, true)
+
+    -- Bottom-right corner (flipped horizontally and vertically)
+    spr(corner_sprite, screen_size - 32 - inset, screen_size - 32 - inset, 4, 4, true, true)
+
+    -- Draw edges
+    -- Left and right edges
+    local counter = 0
+    for y = 32 + inset, screen_size - 32 - edge_size - inset, edge_size do
+        local flip = (flr(counter / 2) % 2) == 1 -- Flip every other pair
+        -- Left edge
+        spr(edge_sprite_vertical, inset, y, 2, 2, false, flip)
+
+        -- Right edge
+        spr(edge_sprite_vertical, screen_size - edge_size - inset, y, 2, 2, true, flip)
+
+        counter = counter + 1
+    end
+
+    -- Top and bottom edges
+    counter = 0
+    for x = 32 + inset, screen_size - 32 - edge_size - inset, edge_size do
+        local flip = (flr(counter / 2) % 2) == 1 -- Flip every other pair
+        -- Top edge
+        spr(edge_sprite_horizontal, x, inset, 2, 2, not flip, false)
+
+        -- Bottom edge
+        spr(edge_sprite_horizontal, x, screen_size - edge_size - inset, 2, 2, not flip, true)
+
+        counter = counter + 1
+    end
 end

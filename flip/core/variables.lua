@@ -6,6 +6,8 @@ base_update_rate = 5                   -- base speed for the snake movement, adj
 update_rate = base_update_rate         -- current speed of the snake, which can change with curses
 screen_size = 128                      -- size of the game screen in pixels
 score = 0
+frame_count = 0
+flash_interval = 2
 
 test_mode = false                      -- set this to true to only spawn golden apples for testing purposes
 
@@ -17,7 +19,7 @@ pause_timer     = 0
 -- border and score bar
 border_size = 8                        -- thickness of the border around the play area
 score_bar = {                          -- settings for the score bar at the top of the screen
-    color       = 7,                   -- color of the score bar
+    color       = 11,                   -- color of the score bar
     text_color  = 0,                   -- color of the text in the score bar
     height      = border_size          -- height of the score bar, same as the border size
 }
@@ -56,13 +58,18 @@ sprites = {
         jaz                 = 56,                  
     },      
     corner                  = 4,        -- id for corner sprite (snake turns)
+    background_corner       = 12,        -- id for background corner sprite (snake turns)
+    background_edge_vertical    = 76,        -- id for background edge sprite (snake turns)
+    background_edge_horizontal  = 108,        -- id for background edge sprite (snake turns)
     apple                   = 5,        -- id for regular apple sprite
     golden_apple            = 6,        -- id for golden apple sprite
     semi_apple              = 21,       -- id for semi-transparent apple sprite (used in invisible apple curse)
     semi_golden_apple       = 22,       -- id for semi-transparent golden apple sprite
     skull                   = 8,        -- id for skull sprite
     poop                    = 9,        -- id for poop sprite
-    egg                     = 25        -- id for poop sprite
+    egg                     = 25,       -- id for poop sprite
+    game_title              = 208,       -- id for game title sprite 
+    game_over               = 132,       -- id for game over sprite 
 }
 
 -- sound ids

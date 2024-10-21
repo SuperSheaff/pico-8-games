@@ -309,8 +309,11 @@ end
 
 -- function to draw snake parts based on direction and sprite type
 function draw_snake_part(x, y, direction, horizontal_sprite, vertical_sprite)
+    palt(0, false)
+
     if direction == directions.right then
         spr(horizontal_sprite, x * grid_size, y * grid_size, 1, 1, false, false) -- normal horizontal
+        -- draw_outline(horizontal_sprite, x * grid_size, y * grid_size, clr, thickness, 1, 1, false, false)
     elseif direction == directions.left then
         spr(horizontal_sprite, x * grid_size, y * grid_size, 1, 1, true, false) -- flipped horizontally
     elseif direction == directions.up then
@@ -318,12 +321,16 @@ function draw_snake_part(x, y, direction, horizontal_sprite, vertical_sprite)
     elseif direction == directions.down then
         spr(vertical_sprite, x * grid_size, y * grid_size, 1, 1, false, true) -- flipped vertically
     end
+
+    palt(0, true)
+
 end
 
 -- function to draw corner sprite based on direction change
 function draw_corner_part(x, y, prev_direction, direction)
     local flip_x, flip_y = false, false
 
+    palt(0, false)
     -- determine the flipping based on direction change
     if prev_direction == directions.up and direction == directions.right then
         flip_x, flip_y = false, false -- normal corner (up-right)
@@ -345,6 +352,7 @@ function draw_corner_part(x, y, prev_direction, direction)
 
     -- draw the corner sprite with appropriate flipping
     spr(sprites.corner, x * grid_size, y * grid_size, 1, 1, flip_x, flip_y)
+    palt(0, true)
 end
 
 -- check if the snake collides with any spike
@@ -477,4 +485,44 @@ function direction_to_dy(dir)
     end
 end
 
+function draw_outline(myspr, x, y, clr, thickness, x_size, y_size, flip_h, flip_v)
+    -- nil check for few parameters so you can
+    -- call much simple versions of the function, see first example in draw
+    -- nil is false if checked for boolean so flip_h and flip_v can stay nil
+    if (clr == nil) clr = 7
+    if (thickness == nil) thickness = 1 
+    if (x_size == nil) x_size = 1    
+    if (y_size == nil) y_size = 1 
+    
+    -- set color palette to outline
+    for i=1,15,1 do
+        pal(i, clr)
+    end
 
+    -- handle black outline transparency issues
+    if clr == 0 then
+        palt(0, false)
+    end
+
+    -- draw the sprite 9 times by 1-1 offsets
+    -- in each direction. the created blob is 
+    -- which is the sprite's outline 
+    for i=-thickness,thickness do
+        for j=-thickness,thickness do
+            spr(myspr, x-i, y-j, x_size, y_size, flip_h, flip_v)
+        end
+    end
+
+    -- reset black color transparency
+    if clr == 0 then
+        palt(0, true)
+    end
+
+    -- reset color palette, if you are using
+    -- a custom palette reset to that
+    pal()
+
+    -- draw the original sprite in the middle
+    -- which causes the outline effect
+    spr(myspr, x, y, x_size, y_size, flip_h, flip_v)
+end

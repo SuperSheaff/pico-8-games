@@ -2,15 +2,18 @@
 
 -- native init
 function _init()
-    reset_game_state()
-
     -- swaps one of the colors
     poke(0x5f15, 129) 
+
+    play_intro()
+
 end
 
 -- native update, pseudo state machine
 function _update()
-    if game_state == "play" then
+    if game_state == "intro" then
+        update_intro()
+    elseif game_state == "play" then
         update_game()
     elseif game_state == "game_over" then
         update_game_over()
@@ -23,25 +26,14 @@ end
 
 -- native draw
 function _draw()
-    cls(background_color) -- clear the background with the specified color
-
-    -- draw checkerboard background
-    draw_checkerboard(0, 5) -- use color 1 for light squares and 5 for dark squares
-
-    ui:draw_border()    -- draw the ui
-    ui:handle_score()   -- draw the score
-    apple:draw()        -- draw the apple
-    draw_spikes()       -- draw all active spikes
-    draw_poop_trail()   -- draw all active poop
-    draw_egg_trail()   -- draw all active poop
-    snake:draw()        -- draw the snake
-
-    -- handle drawing for game over state
-    if game_state == "game_over" then
-        ui:draw_game_over_effects() -- draw game over effects
+    if game_state == "intro" then
+        draw_intro()
+    elseif game_state == "play" then
+        draw_game()
+    elseif game_state == "game_over" then
+        draw_game_over()
     end
-
-    -- draw the curse selection screen if in choose_curse state
+   -- draw the curse selection screen if in choose_curse state
     if game_state == "choose_curse" then
         ui:draw_curse_screen() -- draw curses over the game
     end
@@ -75,6 +67,10 @@ function reset_game_state()
     ui:reset_flash_state()
 end
 
+function play_intro()
+    music(0)
+    game_state = "intro"
+end
 -- update the game when in play state
 function update_game()
 
@@ -105,6 +101,13 @@ function update_game()
     end
 end
 
+function update_intro()
+    -- Wait for player input to continue
+    if btnp(5) then
+        music(-1)
+        reset_game_state()
+    end
+end
 
 -- handle the game over state and restart option
 function update_game_over()
@@ -188,4 +191,77 @@ function draw_checkerboard(light_color, dark_color)
             rectfill(x, y, x + grid_size - 1, y + grid_size - 1, color)
         end
     end
+end
+
+function draw_intro()
+    cls(0)   -- clear the background with the specified color
+    ui:draw_background()
+
+    local presents = "flip presents"
+    local presents_x = (screen_size - #presents * 4) / 2  -- calculate x position to center the presents
+    local presents_y = 16
+
+    -- draw the presents in green
+    print(presents, presents_x, presents_y, 7)
+
+    local the = "the"
+    local the_x = ((screen_size - #the * 4) / 2) - 15   -- calculate x position to center the the
+    local the_y = 27 + 8  -- Lower by 8
+
+    -- draw the the in green
+    print(the, the_x, the_y, 11)
+
+    -- Draw the game name sprite with a black border
+    local sprite_x = 0
+    local sprite_y = 26 + 8  -- Lower by 8
+    local sprite_id = sprites.game_title
+    local sprite_size = 64
+
+    -- Draw the actual sprite
+    spr(sprite_id, sprite_x, sprite_y, 128, 128)
+
+    -- Bobbing effect for character faces
+    local character_sprites = {32, 33, 34, 35, 36, 37, 38, 39, 40}  -- IDs for welly, doug, etc.
+    local num_sprites = #character_sprites
+    local spacing = screen_size / (num_sprites + 3)  -- Reduce spacing to bring sprites closer
+
+    for i, sprite_id in ipairs(character_sprites) do
+        local x = (i * spacing) + 8  -- Adjust starting position slightly to the right
+        -- Single wave effect
+        local base_y = screen_size / 2 + 16  -- Lower by 16
+        local y = base_y + sin((frame_count * 0.05) + (i * 0.3)) * 5  -- Wave effect
+        spr(sprite_id, x, y)
+    end
+
+    local instructions = "press x to start"
+    local instructions_x = (screen_size - #instructions * 4) / 2  -- calculate x position to center the instructions
+    local instructions_y = screen_size - 22  -- calculate y position to center the instructions
+
+    -- draw the instructions in green
+    print(instructions, instructions_x, instructions_y, 7) 
+    
+    -- Flashing square logic
+    if (frame_count / flash_interval) % 2 < 1 then
+        -- Draw the flashing square
+        rectfill(55, 105, 59, 111, 11)  -- Adjust the position and size as needed
+        print("x", 56, 106, 0)
+    end
+
+    frame_count = frame_count + 0.2  -- Increment frame count for animation
+end
+
+function draw_game()
+    draw_checkerboard(0, 5) -- use color 1 for light squares and 5 for dark squares
+    ui:draw_background()    -- draw the background
+    ui:draw_border()        -- draw the ui
+    ui:handle_score()       -- draw the score
+    apple:draw()            -- draw the apple
+    draw_spikes()           -- draw all active spikes
+    draw_poop_trail()       -- draw all active poop
+    draw_egg_trail()        -- draw all active poop
+    snake:draw()            -- draw the snake
+end
+
+function draw_game_over()
+    ui:draw_game_over_effects() -- draw game over effects
 end
