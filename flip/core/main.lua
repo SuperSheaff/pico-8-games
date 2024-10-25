@@ -65,6 +65,10 @@ function reset_game_state()
     remove_poop()
     remove_egg_trail()
     ui:reset_flash_state()
+
+    music(-1)
+    music(3)
+
 end
 
 function play_intro()
